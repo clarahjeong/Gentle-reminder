@@ -163,6 +163,23 @@ footer{font-size:12px;color:var(--faint);line-height:1.5}
 .dim{opacity:.18}
 .store-note{font-size:12px;color:var(--faint);margin:0}
 
+/* ---------- check in for another day ---------- */
+.detail .cta{align-self:flex-start;min-height:44px;font-size:15px;padding:0 18px}
+.opts{display:flex;flex-direction:column;gap:6px}
+.opt{font:inherit;font-size:15px;font-weight:500;text-align:left;color:var(--ink);background:var(--ground);border:1px solid var(--line);border-radius:12px;min-height:48px;padding:10px 14px;display:flex;align-items:center;gap:12px;cursor:pointer}
+.opt[aria-checked="true"]{background:var(--sel);color:var(--sel-ink);border-color:var(--sel)}
+.opt .check{margin-left:auto;width:18px;height:18px;opacity:0}
+.opt[aria-checked="true"] .check{opacity:1}
+.sublabel{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:4px 0 -4px}
+.tones{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.tone{font:inherit;font-size:13.5px;font-weight:500;color:var(--ink);background:var(--ground);border:1px solid var(--line);border-radius:12px;min-height:48px;padding:6px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;line-height:1.2;text-align:center}
+.tone[aria-checked="true"]{background:var(--sel);color:var(--sel-ink);border-color:var(--sel)}
+.logfoot{position:sticky;bottom:calc(-20px - var(--safe-b));margin:0 -20px calc(-20px - var(--safe-b));padding:12px 20px calc(16px + var(--safe-b));background:var(--surface);border-top:1px solid var(--line);display:flex;gap:8px}
+.logfoot .btn{flex:1}
+.logfoot .btn.ghost{flex:0 0 auto}
+.btn:disabled{opacity:.4;cursor:default}
+@media (hover:hover){ .opt:not([aria-checked="true"]):hover,.tone:not([aria-checked="true"]):hover{border-color:var(--line-strong)} }
+
 /* ---------- share: a bottom sheet on phones ---------- */
 .sheet{position:fixed;inset:0;background:rgba(15,20,18,.5);display:flex;align-items:flex-end;justify-content:center;z-index:10}
 .panel{background:var(--surface);border-radius:22px 22px 0 0;padding:10px 20px calc(20px + var(--safe-b));width:100%;max-width:560px;display:flex;flex-direction:column;gap:14px;max-height:92%;overflow:auto;animation:sheetUp .28s ease both}
@@ -191,6 +208,7 @@ footer{font-size:12px;color:var(--faint);line-height:1.5}
   .grab{display:none}
   .panel .row{flex-direction:row;flex-wrap:wrap}
   .panel .row .btn{width:auto;flex:1}
+  .logfoot{bottom:-20px;margin:0 -20px -20px;padding:12px 20px 16px;border-radius:0 0 20px 20px}
 }
 @media (hover:hover){
   .mood:hover,.choice:hover{border-color:var(--line-strong)}
@@ -296,6 +314,24 @@ footer{font-size:12px;color:var(--faint);line-height:1.5}
       Your month
     </button>
   </nav>
+</div>
+
+<div class="sheet" id="logSheet" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="log-title">
+    <span class="grab" aria-hidden="true"></span>
+    <h2 id="log-title">How did you feel?</h2>
+    <div class="opts" role="radiogroup" aria-labelledby="log-title" id="logMoods"></div>
+    <p class="sublabel" id="logToneLabel">What did you need to hear? <span style="text-transform:none;letter-spacing:0">(optional)</span></p>
+    <div class="tones" role="radiogroup" aria-labelledby="logToneLabel" id="logTones">
+      <button class="tone" role="radio" data-tone="lift" id="log-lift"><span class="dot lift"></span>Lift me up</button>
+      <button class="tone" role="radio" data-tone="both" id="log-both"><span class="dot both"></span>A bit of both</button>
+      <button class="tone" role="radio" data-tone="push" id="log-push"><span class="dot push"></span>Push me</button>
+    </div>
+    <div class="logfoot">
+      <button class="btn ghost" id="logCancel">Cancel</button>
+      <button class="btn primary" id="logSave" disabled>Save</button>
+    </div>
+  </div>
 </div>
 
 <div class="sheet" id="sheet" hidden>
@@ -618,8 +654,14 @@ function renderDetail(days){
   head.textContent=date.toLocaleDateString(undefined,{weekday:"long", month:"long", day:"numeric"});
   el.appendChild(head);
   const e=days[pad(d)];
+  const now=new Date();
+  const isToday = date.toDateString()===now.toDateString();
   if(!e || !COLORS[e.mood]){
-    const p=document.createElement("p"); p.className="none"; p.textContent="No check-in this day."; el.appendChild(p); return;
+    const p=document.createElement("p"); p.className="none"; p.textContent="No check-in this day."; el.appendChild(p);
+    const b=document.createElement("button"); b.className="btn primary cta";
+    b.textContent = isToday ? "Check in for today" : "Add a check-in";
+    b.addEventListener("click", ()=> isToday ? go(1) : openLog(date, null));
+    el.appendChild(b); return;
   }
   const feel=document.createElement("div"); feel.className="feel";
   const dot=document.createElement("span"); dot.className="mdot"; dot.style.setProperty("--c",COLORS[e.mood].c);
@@ -632,7 +674,15 @@ function renderDetail(days){
     el.appendChild(need);
   }
   const row=document.createElement("div"); row.className="row";
-  if(e.at){ try{ row.append("Checked in at "+new Date(e.at).toLocaleTimeString(undefined,{hour:"numeric", minute:"2-digit"})); }catch(_){ } }
+  if(e.at){ try{
+    const at=new Date(e.at);
+    row.append(at.toDateString()===date.toDateString()
+      ? "Checked in at "+at.toLocaleTimeString(undefined,{hour:"numeric", minute:"2-digit"})
+      : "Added on "+at.toLocaleDateString(undefined,{month:"short", day:"numeric"}));
+  }catch(_){ } }
+  const ed=document.createElement("button"); ed.className="linkbtn"; ed.textContent="Change";
+  ed.addEventListener("click", ()=>openLog(date, e));
+  row.append(ed);
   const rm=document.createElement("button"); rm.className="linkbtn"; rm.textContent="Remove this day";
   rm.addEventListener("click",()=>{
     row.innerHTML=""; row.append("Remove this check-in?");
@@ -644,6 +694,50 @@ function renderDetail(days){
   });
   row.append(rm); el.appendChild(row);
 }
+
+/* ---------- check in for another day ---------- */
+const log = { date:null, mood:null, tone:null, prevFocus:null };
+MOODS.forEach(m=>{
+  const b=document.createElement("button"); b.className="opt"; b.setAttribute("role","radio"); b.id="log-mood-"+m.id; b.dataset.mood=m.id;
+  const dot=document.createElement("span"); dot.className="mdot"; dot.style.setProperty("--c",COLORS[m.id].c);
+  const lab=document.createElement("span"); lab.textContent=m.label;
+  b.append(dot,lab);
+  b.insertAdjacentHTML("beforeend",'<svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>');
+  b.addEventListener("click",()=>{ log.mood=m.id; syncLog(); });
+  $("#logMoods").appendChild(b);
+});
+document.querySelectorAll("#logTones .tone").forEach(b=>{
+  b.addEventListener("click",()=>{ log.tone = log.tone===b.dataset.tone ? null : b.dataset.tone; syncLog(); });
+});
+function syncLog(){
+  document.querySelectorAll("#logMoods .opt").forEach(b=>b.setAttribute("aria-checked", b.dataset.mood===log.mood));
+  document.querySelectorAll("#logTones .tone").forEach(b=>b.setAttribute("aria-checked", b.dataset.tone===log.tone));
+  $("#logSave").disabled = !log.mood;
+}
+function openLog(date, entry){
+  log.date=date; log.mood=entry?entry.mood:null; log.tone=entry?entry.tone||null:null; log.prevFocus=document.activeElement;
+  $("#log-title").textContent = "How did you feel on "+date.toLocaleDateString(undefined,{weekday:"long", month:"short", day:"numeric"})+"?";
+  $("#logSave").textContent = entry ? "Save changes" : "Save";
+  syncLog();
+  $("#logSheet").hidden=false;
+  $("#logSheet .panel").scrollTop=0;
+  (document.querySelector('#logMoods .opt[aria-checked="true"]')||$("#logMoods .opt")).focus({preventScroll:true});
+}
+function closeLog(){ $("#logSheet").hidden=true; if(log.prevFocus && log.prevFocus.isConnected) log.prevFocus.focus({preventScroll:true}); }
+$("#logCancel").addEventListener("click", closeLog);
+$("#logSheet").addEventListener("click", e=>{ if(e.target.id==="logSheet") closeLog(); });
+document.addEventListener("keydown", e=>{ if(e.key==="Escape" && !$("#logSheet").hidden) closeLog(); });
+$("#logSave").addEventListener("click", async ()=>{
+  if(!log.mood) return;
+  const d=log.date, entry={mood:log.mood, at:new Date().toISOString()};
+  if(log.tone) entry.tone=log.tone;
+  $("#logSave").disabled=true;
+  await store.setDay(monthKey(d), dayKey(d), entry);
+  $("#logSheet").hidden=true;
+  cal.selected=d.getDate();
+  await renderMonth();
+  const b=document.querySelector('.day[data-day="'+d.getDate()+'"]'); if(b) b.focus({preventScroll:true});
+});
 
 /* ---------- share as image ---------- */
 function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
