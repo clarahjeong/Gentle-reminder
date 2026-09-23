@@ -1,0 +1,36 @@
+# Gentle Reminder
+
+A small, calm web app for the start of the day. Pick how you're feeling, choose what you need to hear, and get two Bible verses for it.
+
+1. **How are you walking into today?** Choose from 9 feelings: a great day, just another day, wishing today was over, anxious, angry, grieving, alone, not feeling like enough, or having messed up.
+2. **What do you need to hear?** Choose *Lift me up* (comfort), *Push me* (a challenge), or *A bit of both*.
+3. **Your verses.** Two verses appear. *New pair* gives you a different pair, and *Share as image* makes a card you can save or send.
+
+## Run it
+
+It's one static file with no build step. Open `index.html` in a browser, or serve the folder:
+
+```sh
+python3 -m http.server 8000
+```
+
+To put it online with GitHub Pages, go to **Settings → Pages**, choose **Deploy from a branch**, and pick `main` / root.
+
+## Editing verses
+
+Verses live in the `VERSES` object near the top of the `<script>` in `index.html`. Each feeling has a `lift` list and a `push` list:
+
+```js
+angry: {
+  lift: [{ ref: "Psalm 62:8", text: "Trust in him at all times…" }],
+  push: [{ ref: "James 1:19–20", text: "Everyone should be quick to listen…" }]
+}
+```
+
+Feelings, their labels, and the heading shown above the verses are set in the `MOODS` array.
+
+## Scripture
+
+Scripture quotations taken from The Holy Bible, New International Version® NIV®. Copyright © 1973, 1978, 1984, 2011 by Biblica, Inc.™ Used by permission. All rights reserved worldwide.
+
+This is for personal use. Before making the app public, check [Biblica's permission guidelines](https://www.biblica.com/permissions/) for publishing NIV text.

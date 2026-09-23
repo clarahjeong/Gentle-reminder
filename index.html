@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gentle Reminder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300;1,6..72,400&display=swap">
+<style>
+:root{
+  --ground:#F4F5F2; --surface:#FFFFFF; --ink:#27302C; --muted:#6C7570; --faint:#9AA29D;
+  --line:#E2E5E0; --line-strong:#C9CEC8;
+  --lift:#5F8A78; --lift-soft:#E6EFEA; --push:#646C9E; --push-soft:#E8E9F3;
+  --sel:#27302C; --sel-ink:#F4F5F2;
+  --serif:"Newsreader", "Iowan Old Style", Georgia, serif;
+  --sans:"Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --ground:#131715; --surface:#1A1F1D; --ink:#E4E8E5; --muted:#9BA49F; --faint:#6C7571;
+    --line:#262C29; --line-strong:#39413D;
+    --lift:#8DB5A3; --lift-soft:#1F2B26; --push:#A3A8D6; --push-soft:#22243A;
+    --sel:#E4E8E5; --sel-ink:#131715;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#131715; --surface:#1A1F1D; --ink:#E4E8E5; --muted:#9BA49F; --faint:#6C7571;
+  --line:#262C29; --line-strong:#39413D;
+  --lift:#8DB5A3; --lift-soft:#1F2B26; --push:#A3A8D6; --push-soft:#22243A;
+  --sel:#E4E8E5; --sel-ink:#131715;
+}
+*{box-sizing:border-box}
+body{margin:0}
+img{max-width:100%}
+html,body{background:var(--ground)}
+body{font-family:var(--sans);color:var(--ink);font-size:15px;line-height:1.5;padding-inline:16px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:720px;margin:0 auto;padding-block:28px 56px;display:flex;flex-direction:column;gap:32px;min-height:100%}
+
+header{display:flex;flex-direction:column;gap:6px}
+.date{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:500}
+h1{font-family:var(--serif);font-weight:300;font-size:clamp(30px,6vw,42px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+
+.label{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:0 0 12px}
+
+.moods{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media (max-width:560px){.moods{grid-template-columns:repeat(2,1fr)}.mood:last-child:nth-child(odd){grid-column:1/-1;min-height:56px}}
+.mood{font:inherit;font-size:14.5px;font-weight:500;text-align:left;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 14px 16px;min-height:72px;cursor:pointer;line-height:1.3;transition:border-color .15s,background .15s,color .15s}
+.mood:hover{border-color:var(--line-strong)}
+.mood[aria-pressed="true"]{background:var(--sel);color:var(--sel-ink);border-color:var(--sel)}
+[hidden]{display:none!important}
+.mood:focus-visible,.btn:focus-visible{outline:2px solid var(--lift);outline-offset:2px}
+
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex:none}
+.dot.lift{background:var(--lift)} .dot.push{background:var(--push)}
+.dot.both{background:linear-gradient(90deg,var(--lift) 50%,var(--push) 50%)}
+
+
+.for-h{font-style:italic}
+.verses{display:flex;flex-direction:column;gap:32px}
+.verse{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;animation:rise .5s ease both}
+.verse:nth-child(2){animation-delay:.08s}
+.tag{grid-column:1/-1;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;display:flex;align-items:center;gap:8px}
+.tag.lift{color:var(--lift)} .tag.push{color:var(--push)}
+blockquote{grid-column:1/-1;margin:0;font-family:var(--serif);font-weight:300;font-size:clamp(21px,3.6vw,26px);line-height:1.42;max-width:34ch;text-wrap:pretty}
+cite{grid-column:1/-1;font-style:normal;font-size:13px;font-weight:500;color:var(--muted);letter-spacing:.04em}
+@keyframes rise{from{opacity:.001;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.verse{animation:none}}
+
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.btn{font:inherit;font-size:14px;font-weight:500;display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--sel);color:var(--sel-ink);border-color:var(--sel)}
+.btn svg{width:16px;height:16px;flex:none}
+
+
+/* steps */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:36px}
+.progress{display:flex;gap:6px;align-items:center}
+.progress span{width:28px;height:3px;border-radius:2px;background:var(--line-strong);transition:background .3s}
+.progress span.on{background:var(--ink)}
+.back{font:inherit;font-size:14px;font-weight:500;color:var(--muted);background:none;border:0;padding:8px 4px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.back:hover{color:var(--ink)}
+.back svg{width:16px;height:16px}
+.back:focus-visible,.choice:focus-visible{outline:2px solid var(--lift);outline-offset:2px}
+.step{display:flex;flex-direction:column;gap:28px;animation:stepIn .45s ease both}
+.step h1:focus{outline:none}
+@keyframes stepIn{from{opacity:.001;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.step{animation:none}}
+.echo{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+.echo b{font-weight:500;color:var(--ink)}
+.echo .sep{color:var(--faint)}
+
+.choices{display:flex;flex-direction:column;gap:10px}
+.choice{font:inherit;text-align:left;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:4px 16px;padding:20px 20px;background:var(--surface);border:1px solid var(--line);border-radius:12px;cursor:pointer;color:var(--ink);transition:border-color .15s,transform .15s}
+.choice:hover{border-color:var(--line-strong)}
+.choice:active{transform:scale(.995)}
+.choice .dot{width:10px;height:10px;grid-row:1/3}
+.choice .dot.both{background:linear-gradient(90deg,var(--lift) 50%,var(--push) 50%)}
+.choice .t{font-family:var(--serif);font-size:22px;font-weight:400;line-height:1.2}
+.choice .d{grid-column:2;font-size:14px;color:var(--muted)}
+.choice .arrow{grid-row:1/3;grid-column:3;color:var(--faint);width:18px;height:18px}
+.choice:hover .arrow{color:var(--ink)}
+.choice[data-tone="lift"]:hover{border-color:var(--lift)}
+.choice[data-tone="push"]:hover{border-color:var(--push)}
+
+footer{font-size:12px;color:var(--faint);line-height:1.5;max-width:60ch}
+
+/* share sheet */
+.sheet{position:fixed;inset:0;background:rgba(15,20,18,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
+.sheet[hidden]{display:none}
+.panel{background:var(--surface);border-radius:16px;padding:20px;max-width:420px;width:100%;display:flex;flex-direction:column;gap:14px;max-height:calc(100% - 32px);overflow:auto}
+.panel img{width:100%;border-radius:10px;border:1px solid var(--line);display:block}
+.panel h2{font-size:16px;margin:0;font-weight:600}
+.hint{font-size:13px;color:var(--muted);margin:0}
+.panel .row{display:flex;gap:8px;flex-wrap:wrap}
+.status{font-size:13px;color:var(--lift);min-height:1.2em;margin:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <button class="back" id="back" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      Back
+    </button>
+    <span class="date" id="date">Morning</span>
+    <div class="progress" aria-label="Step 1 of 3" id="progress"><span class="on"></span><span></span><span></span></div>
+  </div>
+
+  <!-- Step 1: feeling -->
+  <section class="step" id="step1" aria-labelledby="h1">
+    <h1 id="h1" tabindex="-1">How are you walking into today?</h1>
+    <div class="moods" id="moods"></div>
+  </section>
+
+  <!-- Step 2: what you need -->
+  <section class="step" id="step2" aria-labelledby="h2" hidden>
+    <div class="echo"><span>Feeling</span> <b id="echoMood"></b></div>
+    <h1 id="h2" tabindex="-1">What do you need to hear?</h1>
+    <div class="choices" id="choices">
+      <button class="choice" data-tone="lift" id="tone-lift">
+        <span class="dot lift"></span><span class="t">Lift me up</span><span class="d">Comfort and reassurance for right now</span>
+        <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+      <button class="choice" data-tone="both" id="tone-both">
+        <span class="dot both"></span><span class="t">A bit of both</span><span class="d">One verse to hold you, one to stretch you</span>
+        <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+      <button class="choice" data-tone="push" id="tone-push">
+        <span class="dot push"></span><span class="t">Push me</span><span class="d">A challenge to think and grow</span>
+        <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+  </section>
+
+  <!-- Step 3: verses -->
+  <section class="step" id="step3" aria-labelledby="h3" hidden>
+    <div class="echo"><b id="echoMood3"></b><span class="sep">·</span><b id="echoTone"></b></div>
+    <h1 id="h3" tabindex="-1" class="for-h"></h1>
+    <div class="verses" id="verses" aria-live="polite"></div>
+    <div class="actions">
+      <button class="btn primary" id="shuffle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></svg>
+        New pair
+      </button>
+      <button class="btn" id="share">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.5-4.5L6 21"/></svg>
+        Share as image
+      </button>
+      <button class="back" id="restart">Start over</button>
+    </div>
+    <footer>Scripture quotations taken from The Holy Bible, New International Version® NIV®. Copyright © 1973, 1978, 1984, 2011 by Biblica, Inc.™ Used by permission. All rights reserved worldwide.</footer>
+  </section>
+</div>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+    <h2 id="sheet-title">Share this pair</h2>
+    <img id="shareImg" alt="Image of today's two verses">
+    <p class="hint">Long-press (phone) or right-click (computer) the image to save it.</p>
+    <div class="row">
+      <button class="btn primary" id="copyImg">Copy image</button>
+      <button class="btn" id="copyText">Copy text</button>
+      <button class="btn" id="closeSheet">Close</button>
+    </div>
+    <p class="status" id="status" role="status"></p>
+  </div>
+</div>
+
+<script>
+const VERSES = {"great": {"lift": [{"ref": "Psalm 118:24", "text": "The LORD has done it this very day; let us rejoice today and be glad."}, {"ref": "Psalm 16:11", "text": "You make known to me the path of life; you will fill me with joy in your presence, with eternal pleasures at your right hand."}, {"ref": "James 1:17", "text": "Every good and perfect gift is from above, coming down from the Father of the heavenly lights, who does not change like shifting shadows."}], "push": [{"ref": "Colossians 3:23", "text": "Whatever you do, work at it with all your heart, as working for the Lord, not for human masters."}, {"ref": "Proverbs 27:1", "text": "Do not boast about tomorrow, for you do not know what a day may bring."}, {"ref": "1 Thessalonians 5:16–18", "text": "Rejoice always, pray continually, give thanks in all circumstances; for this is God’s will for you in Christ Jesus."}]}, "another": {"lift": [{"ref": "Lamentations 3:22–23", "text": "Because of the LORD’s great love we are not consumed, for his compassions never fail. They are new every morning; great is your faithfulness."}, {"ref": "Zephaniah 3:17", "text": "The LORD your God is with you, the Mighty Warrior who saves. He will take great delight in you; in his love he will no longer rebuke you, but will rejoice over you with singing."}, {"ref": "Ephesians 2:10", "text": "For we are God’s handiwork, created in Christ Jesus to do good works, which God prepared in advance for us to do."}], "push": [{"ref": "Psalm 90:12", "text": "Teach us to number our days, that we may gain a heart of wisdom."}, {"ref": "Micah 6:8", "text": "He has shown you, O mortal, what is good. And what does the LORD require of you? To act justly and to love mercy and to walk humbly with your God."}, {"ref": "1 Corinthians 10:31", "text": "So whether you eat or drink or whatever you do, do it all for the glory of God."}]}, "over": {"lift": [{"ref": "Matthew 11:28", "text": "Come to me, all you who are weary and burdened, and I will give you rest."}, {"ref": "Psalm 30:5", "text": "Weeping may stay for the night, but rejoicing comes in the morning."}, {"ref": "Isaiah 40:31", "text": "Those who hope in the LORD will renew their strength. They will soar on wings like eagles; they will run and not grow weary, they will walk and not be faint."}], "push": [{"ref": "Galatians 6:9", "text": "Let us not become weary in doing good, for at the proper time we will reap a harvest if we do not give up."}, {"ref": "Romans 5:3–4", "text": "Not only so, but we also glory in our sufferings, because we know that suffering produces perseverance; perseverance, character; and character, hope."}, {"ref": "2 Corinthians 4:16", "text": "Therefore we do not lose heart. Though outwardly we are wasting away, yet inwardly we are being renewed day by day."}]}, "anxious": {"lift": [{"ref": "Philippians 4:6–7", "text": "Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God. And the peace of God, which transcends all understanding, will guard your hearts and your minds in Christ Jesus."}, {"ref": "1 Peter 5:7", "text": "Cast all your anxiety on him because he cares for you."}, {"ref": "Isaiah 41:10", "text": "So do not fear, for I am with you; do not be dismayed, for I am your God. I will strengthen you and help you; I will uphold you with my righteous right hand."}], "push": [{"ref": "Matthew 6:34", "text": "Therefore do not worry about tomorrow, for tomorrow will worry about itself. Each day has enough trouble of its own."}, {"ref": "Joshua 1:9", "text": "Have I not commanded you? Be strong and courageous. Do not be afraid; do not be discouraged, for the LORD your God will be with you wherever you go."}, {"ref": "2 Timothy 1:7", "text": "For the Spirit God gave us does not make us timid, but gives us power, love and self-discipline."}]}, "angry": {"lift": [{"ref": "Psalm 62:8", "text": "Trust in him at all times, you people; pour out your hearts to him, for God is our refuge."}, {"ref": "Exodus 14:14", "text": "The LORD will fight for you; you need only to be still."}, {"ref": "Psalm 55:22", "text": "Cast your cares on the LORD and he will sustain you; he will never let the righteous be shaken."}], "push": [{"ref": "James 1:19–20", "text": "Everyone should be quick to listen, slow to speak and slow to become angry, because human anger does not produce the righteousness that God desires."}, {"ref": "Ephesians 4:26–27", "text": "“In your anger do not sin”: Do not let the sun go down while you are still angry, and do not give the devil a foothold."}, {"ref": "Romans 12:19", "text": "Do not take revenge, my dear friends, but leave room for God’s wrath, for it is written: “It is mine to avenge; I will repay,” says the Lord."}]}, "grieving": {"lift": [{"ref": "Psalm 34:18", "text": "The LORD is close to the brokenhearted and saves those who are crushed in spirit."}, {"ref": "Matthew 5:4", "text": "Blessed are those who mourn, for they will be comforted."}, {"ref": "Revelation 21:4", "text": "He will wipe every tear from their eyes. There will be no more death or mourning or crying or pain, for the old order of things has passed away."}], "push": [{"ref": "1 Thessalonians 4:13", "text": "Brothers and sisters, we do not want you to be uninformed about those who sleep in death, so that you do not grieve like the rest of mankind, who have no hope."}, {"ref": "Ecclesiastes 3:4", "text": "A time to weep and a time to laugh, a time to mourn and a time to dance."}, {"ref": "2 Corinthians 1:3–4", "text": "Praise be to the God and Father of our Lord Jesus Christ, the Father of compassion and the God of all comfort, who comforts us in all our troubles, so that we can comfort those in any trouble with the comfort we ourselves receive from God."}]}, "alone": {"lift": [{"ref": "Deuteronomy 31:8", "text": "The LORD himself goes before you and will be with you; he will never leave you nor forsake you. Do not be afraid; do not be discouraged."}, {"ref": "Isaiah 43:2", "text": "When you pass through the waters, I will be with you; and when you pass through the rivers, they will not sweep over you. When you walk through the fire, you will not be burned; the flames will not set you ablaze."}, {"ref": "Psalm 139:9–10", "text": "If I rise on the wings of the dawn, if I settle on the far side of the sea, even there your hand will guide me, your right hand will hold me fast."}], "push": [{"ref": "Hebrews 10:24–25", "text": "And let us consider how we may spur one another on toward love and good deeds, not giving up meeting together, as some are in the habit of doing, but encouraging one another—and all the more as you see the Day approaching."}, {"ref": "Ecclesiastes 4:9–10", "text": "Two are better than one, because they have a good return for their labor: If either of them falls down, one can help the other up. But pity anyone who falls and has no one to help them up."}, {"ref": "Romans 12:15", "text": "Rejoice with those who rejoice; mourn with those who mourn."}]}, "notenough": {"lift": [{"ref": "Psalm 139:14", "text": "I praise you because I am fearfully and wonderfully made; your works are wonderful, I know that full well."}, {"ref": "2 Corinthians 12:9", "text": "But he said to me, “My grace is sufficient for you, for my power is made perfect in weakness.” Therefore I will boast all the more gladly about my weaknesses, so that Christ’s power may rest on me."}, {"ref": "Isaiah 43:1", "text": "Do not fear, for I have redeemed you; I have summoned you by name; you are mine."}], "push": [{"ref": "Galatians 6:4", "text": "Each one should test their own actions. Then they can take pride in themselves alone, without comparing themselves to someone else."}, {"ref": "Galatians 1:10", "text": "Am I now trying to win the approval of human beings, or of God? Or am I trying to please people? If I were still trying to please people, I would not be a servant of Christ."}, {"ref": "Philippians 4:13", "text": "I can do all this through him who gives me strength."}]}, "messedup": {"lift": [{"ref": "1 John 1:9", "text": "If we confess our sins, he is faithful and just and will forgive us our sins and purify us from all unrighteousness."}, {"ref": "Romans 8:1", "text": "Therefore, there is now no condemnation for those who are in Christ Jesus."}, {"ref": "Psalm 103:12", "text": "As far as the east is from the west, so far has he removed our transgressions from us."}], "push": [{"ref": "Philippians 3:13–14", "text": "But one thing I do: Forgetting what is behind and straining toward what is ahead, I press on toward the goal to win the prize for which God has called me heavenward in Christ Jesus."}, {"ref": "Proverbs 28:13", "text": "Whoever conceals their sins does not prosper, but the one who confesses and renounces them finds mercy."}, {"ref": "James 5:16", "text": "Therefore confess your sins to each other and pray for each other so that you may be healed. The prayer of a righteous person is powerful and effective."}]}};
+
+const MOODS = [
+  {id:"great",    label:"It's going to be a great day",  heading:"For a day that already feels bright"},
+  {id:"another",  label:"It's just another day",         heading:"For an ordinary day"},
+  {id:"over",     label:"I wish today was over already", heading:"For a heavy, tired day"},
+  {id:"anxious",  label:"I'm anxious about something",   heading:"For a worried heart"},
+  {id:"angry",    label:"I'm angry",                     heading:"For when you're angry"},
+  {id:"grieving", label:"I'm grieving",                  heading:"For a grieving heart"},
+  {id:"alone",    label:"I feel alone",                  heading:"For when you feel alone"},
+  {id:"notenough",label:"I don't feel like enough",      heading:"For when you feel like you're not enough"},
+  {id:"messedup", label:"I messed up",                   heading:"For when you've fallen short"}
+];
+const TAGS = {lift:"Lift", push:"Push"};
+const TONE_NAMES = {lift:"Lift me up", both:"A bit of both", push:"Push me"};
+
+const state = {step:1, mood:null, tone:null, pair:[], last:""};
+const $ = s => document.querySelector(s);
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+const moodOf = id => MOODS.find(m=>m.id===id);
+
+// date line
+try{
+  const d = new Date();
+  const part = d.getHours()<12 ? "morning" : d.getHours()<17 ? "afternoon" : "evening";
+  $("#date").textContent = d.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"}) + " · " + part;
+}catch(e){}
+
+// step 1: mood tiles
+MOODS.forEach(m=>{
+  const b=document.createElement("button");
+  b.className="mood"; b.id="mood-"+m.id; b.textContent=m.label; b.dataset.mood=m.id;
+  b.addEventListener("click",()=>{ state.mood=m.id; go(2); });
+  $("#moods").appendChild(b);
+});
+
+// step 2: tone choices
+document.querySelectorAll(".choice").forEach(b=>{
+  b.addEventListener("click",()=>{ state.tone=b.dataset.tone; state.last=""; choosePair(); go(3); });
+});
+
+function go(n){
+  state.step=n;
+  [1,2,3].forEach(i=>{ $("#step"+i).hidden = i!==n; });
+  $("#back").hidden = n===1;
+  $("#date").hidden = n!==1;
+  document.querySelectorAll("#progress span").forEach((s,i)=>s.classList.toggle("on", i<n));
+  $("#progress").setAttribute("aria-label",`Step ${n} of 3`);
+  document.querySelectorAll(".mood").forEach(b=>b.setAttribute("aria-pressed", b.dataset.mood===state.mood));
+  if(n>=2) $("#echoMood").textContent = moodOf(state.mood).label;
+  if(n===3){
+    $("#echoMood3").textContent = moodOf(state.mood).label;
+    $("#echoTone").textContent = TONE_NAMES[state.tone];
+    $("#h3").textContent = moodOf(state.mood).heading;
+    renderVerses();
+  }
+  // restart the entrance animation and move focus to the step heading
+  const s=$("#step"+n); s.style.animation="none"; s.offsetHeight; s.style.animation="";
+  window.scrollTo({top:0});
+  $("#h"+n).focus({preventScroll:true});
+}
+
+$("#back").addEventListener("click",()=>go(state.step-1));
+$("#restart").addEventListener("click",()=>go(1));
+$("#shuffle").addEventListener("click",()=>{ choosePair(); renderVerses(); });
+
+function choosePair(){
+  const pool = VERSES[state.mood];
+  let pair, key, tries=0;
+  do{
+    if(state.tone==="both"){
+      pair=[{...pick(pool.lift),tone:"lift"},{...pick(pool.push),tone:"push"}];
+    }else{
+      const list=pool[state.tone];
+      const a=Math.floor(Math.random()*list.length);
+      let b=Math.floor(Math.random()*(list.length-1)); if(b>=a) b++;
+      pair=[{...list[a],tone:state.tone},{...list[b],tone:state.tone}];
+    }
+    key=pair.map(p=>p.ref).sort().join("|");
+  }while(key===state.last && ++tries<12);
+  state.last=key; state.pair=pair;
+}
+
+function renderVerses(){
+  const v=$("#verses"); v.innerHTML="";
+  state.pair.forEach(p=>{
+    const art=document.createElement("article"); art.className="verse";
+    art.innerHTML=`<span class="tag ${p.tone}"><span class="dot ${p.tone}"></span>${TAGS[p.tone]}</span>
+      <blockquote></blockquote><cite></cite>`;
+    art.querySelector("blockquote").textContent=p.text;
+    art.querySelector("cite").textContent=p.ref;
+    v.appendChild(art);
+  });
+}
+
+/* ---------- share as image ---------- */
+function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function wrap(ctx,text,maxW){
+  const words=text.split(" "), lines=[]; let line="";
+  words.forEach(w=>{ const t=line?line+" "+w:w; if(ctx.measureText(t).width>maxW && line){lines.push(line); line=w;} else line=t; });
+  if(line) lines.push(line); return lines;
+}
+async function makeImage(){
+  try{ await Promise.all([document.fonts.load('300 44px "Newsreader"'),document.fonts.load('500 26px "Figtree"'),document.fonts.load('italic 300 34px "Newsreader"')]); }catch(e){}
+  const W=1080,H=1350,P=110, c=document.createElement("canvas"); c.width=W; c.height=H;
+  const x=c.getContext("2d");
+  // always a light, dawn-toned card so it reads well wherever it's posted
+  const g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,"#F7F8F5"); g.addColorStop(1,"#EBEFEA");
+  x.fillStyle=g; x.fillRect(0,0,W,H);
+  const col={lift:"#5F8A78",push:"#646C9E"};
+  x.fillStyle="#6C7570"; x.font='italic 300 34px "Newsreader", Georgia, serif';
+  x.fillText(MOODS.find(m=>m.id===state.mood).heading, P, P+30);
+
+  // measure verse blocks, then fit and center vertically
+  const GAP=110;
+  let size=54, blocks, total;
+  const measure=()=>{
+    x.font=`300 ${size}px "Newsreader", Georgia, serif`;
+    blocks=state.pair.map(p=>({p,lines:wrap(x,p.text,W-2*P)}));
+    total=blocks.reduce((s,b)=>s+48+b.lines.length*size*1.38+52,0)+GAP*(blocks.length-1);
+  };
+  measure(); while(total>H-2*P-200 && size>30){ size-=2; measure(); }
+
+  let y=Math.max(P+130,(H-total)/2+20);
+  blocks.forEach((b,i)=>{
+    x.fillStyle=col[b.p.tone]; x.beginPath(); x.arc(P+6,y+14,6,0,Math.PI*2); x.fill();
+    x.font='600 22px "Figtree", system-ui, sans-serif'; x.letterSpacing="4px"; x.textBaseline="middle";
+    x.fillText(TAGS[b.p.tone].toUpperCase(), P+24, y+15); x.letterSpacing="0px"; x.textBaseline="alphabetic";
+    y+=48;
+    x.fillStyle="#27302C"; x.font=`300 ${size}px "Newsreader", Georgia, serif`;
+    b.lines.forEach(l=>{ x.fillText(l,P,y+size*.95); y+=size*1.38; });
+    x.fillStyle="#6C7570"; x.font='500 26px "Figtree", system-ui, sans-serif';
+    x.fillText(b.p.ref,P,y+40); y+=52;
+    if(i<blocks.length-1){ x.fillStyle="#D5DAD4"; x.fillRect(P,y+GAP/2-1,80,2); y+=GAP; }
+  });
+  x.fillStyle="#9AA29D"; x.font='500 22px "Figtree", system-ui, sans-serif';
+  x.fillText("Gentle Reminder · NIV", P, H-P+40);
+  return c;
+}
+let currentBlob=null;
+$("#share").addEventListener("click", async ()=>{
+  $("#status").textContent="";
+  const c=await makeImage();
+  $("#shareImg").src=c.toDataURL("image/png");
+  currentBlob=await new Promise(r=>c.toBlob(r,"image/png"));
+  $("#sheet").hidden=false; $("#copyImg").focus();
+});
+$("#copyImg").addEventListener("click", ()=>{
+  try{
+    navigator.clipboard.write([new ClipboardItem({"image/png":currentBlob})])
+      .then(()=>$("#status").textContent="Image copied — paste it into a message.")
+      .catch(()=>$("#status").textContent="Copying images isn't allowed here. Save the image instead.");
+  }catch(e){ $("#status").textContent="Copying images isn't allowed here. Save the image instead."; }
+});
+$("#copyText").addEventListener("click", ()=>{
+  const t=state.pair.map(p=>`“${p.text}” — ${p.ref}`).join("\n\n");
+  navigator.clipboard.writeText(t).then(()=>$("#status").textContent="Verses copied.")
+    .catch(()=>$("#status").textContent="Couldn't copy. Select the verses on the page instead.");
+});
+function closeSheet(){ $("#sheet").hidden=true; $("#share").focus(); }
+$("#closeSheet").addEventListener("click", closeSheet);
+$("#sheet").addEventListener("click", e=>{ if(e.target.id==="sheet") closeSheet(); });
+document.addEventListener("keydown", e=>{ if(e.key==="Escape" && !$("#sheet").hidden) closeSheet(); });
+</script>
+</body>
+</html>
