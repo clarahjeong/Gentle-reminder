@@ -6,6 +6,12 @@ A small, calm web app for the start of the day. Pick how you're feeling, choose 
 2. **What do you need to hear?** Choose *Lift me up* (comfort), *Push me* (a challenge), or *A bit of both*.
 3. **Your verses.** Two verses appear. *New pair* gives you a different pair, and *Share as image* makes a card you can save or send.
 
+## Your month
+
+Each time you get to your verses, the app saves that day's feeling and what you asked to hear. If you check in more than once in a day, the latest one counts. Tap **Your month** to see a calendar with each day colored by feeling, a bar showing the month's mix, and a count for each feeling. Tap a feeling in the list to highlight its days, or tap a day to see what you picked. You can also remove a day.
+
+No sign-in is needed. When you open the app as a claude.ai artifact, check-ins are saved privately to your account. Anywhere else, including GitHub Pages, they're saved in that browser's `localStorage` and never leave your device.
+
 ## Run it
 
 It's one static file with no build step. Open `index.html` in a browser, or serve the folder:
