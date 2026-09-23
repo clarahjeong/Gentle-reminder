@@ -130,7 +130,8 @@ footer{font-size:12px;color:var(--faint);line-height:1.5}
 .mnav button:disabled{opacity:.35;cursor:default}
 .mnav svg{width:18px;height:18px}
 #stepM{padding-top:20px}
-.msum{font-size:14px;color:var(--muted);margin:-10px 0 0}
+.msum{font-size:14px;color:var(--muted);margin:-6px 0 0}
+#holo:not([hidden])+.msum{margin-top:-8px}
 .msum b{color:var(--ink);font-weight:500;font-variant-numeric:tabular-nums}
 
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;touch-action:pan-y}
@@ -149,8 +150,6 @@ footer{font-size:12px;color:var(--faint);line-height:1.5}
 .detail .need{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:8px}
 .detail .none{font-size:15px;color:var(--muted);margin:0}
 .detail .row{display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--muted)}
-
-.mixhead{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:6px 0 -8px}
 /* holographic mix: every feeling's color, the most frequent one dominant */
 .holo{position:relative;border-radius:22px;overflow:hidden;aspect-ratio:4/3;max-width:100%;background:var(--line);box-shadow:0 1px 0 rgba(255,255,255,.4) inset,0 18px 40px -24px rgba(20,30,25,.45);transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .5s cubic-bezier(.2,.7,.2,1);touch-action:pan-y}
 .holo canvas{display:block;width:100%;height:100%}
@@ -158,13 +157,6 @@ footer{font-size:12px;color:var(--faint);line-height:1.5}
 .holo-cap{position:absolute;left:14px;bottom:14px;display:flex;align-items:center;gap:8px;padding:7px 12px 7px 10px;border-radius:999px;background:rgba(255,255,255,.72);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#1d2320;font-size:13px;font-weight:500;max-width:calc(100% - 28px)}
 .holo-cap .mdot{width:10px;height:10px;box-shadow:0 0 0 1.5px rgba(255,255,255,.9)}
 .holo-cap span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.legend{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;margin:0;padding:0;list-style:none}
-.legend button{font:inherit;font-size:14px;color:var(--ink);background:none;border:0;border-radius:10px;min-height:44px;padding:0 10px;width:100%;display:flex;align-items:center;gap:10px;cursor:pointer;text-align:left}
-.legend button[aria-pressed="true"]{background:var(--surface);box-shadow:inset 0 0 0 1px var(--line-strong)}
-.legend .mdot{width:10px;height:10px}
-.legend .n{margin-left:auto;color:var(--muted);font-variant-numeric:tabular-nums}
-.legend .zero{color:var(--faint)}
-.legend .zero .mdot{opacity:.35}
 .dim{opacity:.18}
 .store-note{font-size:12px;color:var(--faint);margin:0}
 
@@ -207,7 +199,6 @@ footer{font-size:12px;color:var(--faint);line-height:1.5}
   .step{gap:28px;padding-top:16px}
   .cal{gap:8px}
   .day{font-size:16px}
-  .legend{grid-template-columns:repeat(3,1fr)}
   .sheet{align-items:center;padding:24px}
   .panel{border-radius:20px;padding:20px;max-width:420px}
   .grab{display:none}
@@ -223,7 +214,6 @@ footer{font-size:12px;color:var(--faint);line-height:1.5}
   .back:hover,.tab:hover{color:var(--ink)}
   .btn:hover{border-color:var(--ink)}
   .day:not(.has):not(.future):hover{background:var(--surface)}
-  .legend button:hover{background:var(--surface)}
   .linkbtn:hover{text-decoration-color:var(--ink)}
 }
 @media (prefers-reduced-motion:reduce){.step,.verse,.panel{animation:none}}
@@ -297,16 +287,14 @@ footer{font-size:12px;color:var(--faint);line-height:1.5}
         <button id="nextM" aria-label="Next month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
       </div>
     </div>
-    <p class="msum" id="msum">Loading…</p>
-    <div class="cal" id="cal" role="group" aria-label="Calendar"></div>
-    <p class="swipe-hint" aria-hidden="true">Swipe the calendar to change months</p>
-    <div class="detail" id="detail" aria-live="polite"></div>
-    <p class="mixhead" id="mixhead">This month's mix</p>
     <div class="holo" id="holo" role="img" aria-label="">
       <canvas id="holoCanvas"></canvas>
       <div class="holo-cap" id="holoCap" aria-hidden="true"><span class="mdot" id="holoDot"></span><span id="holoText"></span></div>
     </div>
-    <ul class="legend" id="legend" aria-label="Feelings this month. Select one to highlight its days."></ul>
+    <p class="msum" id="msum">Loading…</p>
+    <div class="cal" id="cal" role="group" aria-label="Calendar"></div>
+    <p class="swipe-hint" aria-hidden="true">Swipe the calendar to change months</p>
+    <div class="detail" id="detail" aria-live="polite"></div>
     <p class="store-note" id="storeNote"></p>
   </section>
 </div>
@@ -592,33 +580,17 @@ async function renderMonth(){
   const sum=$("#msum"); sum.innerHTML="";
   if(total){
     sum.append("You checked in on ");
-    const b1=document.createElement("b"); b1.textContent=total; sum.append(b1, ` of ${elapsed} day${elapsed===1?"":"s"}. Most often: `);
-    const b2=document.createElement("b"); b2.textContent=COLORS[top[0]].short.toLowerCase(); sum.append(b2, ".");
+    const b1=document.createElement("b"); b1.textContent=total; sum.append(b1, ` of ${elapsed} day${elapsed===1?"":"s"}.`);
   }else{
     sum.textContent = elapsed ? "No check-ins yet this month." : "This month hasn't started yet.";
   }
 
   // aggregate bar
-  $("#holo").hidden=!total; $("#mixhead").hidden=!total;
+  $("#holo").hidden=!total;
   if(total){
     holo.set(counts, total, mk);
     $("#holo").setAttribute("aria-label", "A holographic blend of this month's feelings: "+top.map(id=>COLORS[id].short+" "+counts[id]).join(", ")+".");
   }else holo.stop();
-
-  // legend (all nine, most frequent first, then the rest in the usual order)
-  const order = [...top, ...MOODS.map(m=>m.id).filter(id=>!counts[id])];
-  const lg=$("#legend"); lg.innerHTML="";
-  order.forEach(id=>{
-    const li=document.createElement("li"), b=document.createElement("button");
-    b.dataset.mood=id; b.setAttribute("aria-pressed", cal.focus===id);
-    if(!counts[id]) b.className="zero";
-    const dot=document.createElement("span"); dot.className="mdot"; dot.style.setProperty("--c",COLORS[id].c);
-    const nm=document.createElement("span"); nm.textContent=COLORS[id].short;
-    const n=document.createElement("span"); n.className="n"; n.textContent=counts[id];
-    b.append(dot,nm,n);
-    b.addEventListener("click",()=>{ cal.focus = cal.focus===id ? null : id; applyFocus(); });
-    li.appendChild(b); lg.appendChild(li);
-  });
 
   // calendar grid (weeks start on Sunday)
   const g=$("#cal"); g.innerHTML="";
@@ -650,7 +622,6 @@ async function renderMonth(){
 }
 
 function applyFocus(){
-  document.querySelectorAll("#legend button").forEach(b=>b.setAttribute("aria-pressed", cal.focus===b.dataset.mood));
   document.querySelectorAll(".day.has").forEach(el=>el.classList.toggle("dim", !!cal.focus && el.dataset.mood!==cal.focus));
   holo.focus(cal.focus);
 }
