@@ -151,8 +151,13 @@ footer{font-size:12px;color:var(--faint);line-height:1.5}
 .detail .row{display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--muted)}
 
 .mixhead{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:6px 0 -8px}
-.stack{display:flex;gap:2px;height:12px;border-radius:6px;overflow:hidden;background:var(--line)}
-.stack span{background:var(--c);min-width:4px;transition:opacity .2s}
+/* holographic mix: every feeling's color, the most frequent one dominant */
+.holo{position:relative;border-radius:22px;overflow:hidden;aspect-ratio:4/3;max-width:100%;background:var(--line);box-shadow:0 1px 0 rgba(255,255,255,.4) inset,0 18px 40px -24px rgba(20,30,25,.45);transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .5s cubic-bezier(.2,.7,.2,1);touch-action:pan-y}
+.holo canvas{display:block;width:100%;height:100%}
+.holo::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);pointer-events:none}
+.holo-cap{position:absolute;left:14px;bottom:14px;display:flex;align-items:center;gap:8px;padding:7px 12px 7px 10px;border-radius:999px;background:rgba(255,255,255,.72);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#1d2320;font-size:13px;font-weight:500;max-width:calc(100% - 28px)}
+.holo-cap .mdot{width:10px;height:10px;box-shadow:0 0 0 1.5px rgba(255,255,255,.9)}
+.holo-cap span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .legend{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;margin:0;padding:0;list-style:none}
 .legend button{font:inherit;font-size:14px;color:var(--ink);background:none;border:0;border-radius:10px;min-height:44px;padding:0 10px;width:100%;display:flex;align-items:center;gap:10px;cursor:pointer;text-align:left}
 .legend button[aria-pressed="true"]{background:var(--surface);box-shadow:inset 0 0 0 1px var(--line-strong)}
@@ -297,7 +302,10 @@ footer{font-size:12px;color:var(--faint);line-height:1.5}
     <p class="swipe-hint" aria-hidden="true">Swipe the calendar to change months</p>
     <div class="detail" id="detail" aria-live="polite"></div>
     <p class="mixhead" id="mixhead">This month's mix</p>
-    <div class="stack" id="stack" aria-hidden="true"></div>
+    <div class="holo" id="holo" role="img" aria-label="">
+      <canvas id="holoCanvas"></canvas>
+      <div class="holo-cap" id="holoCap" aria-hidden="true"><span class="mdot" id="holoDot"></span><span id="holoText"></span></div>
+    </div>
     <ul class="legend" id="legend" aria-label="Feelings this month. Select one to highlight its days."></ul>
     <p class="store-note" id="storeNote"></p>
   </section>
@@ -591,8 +599,11 @@ async function renderMonth(){
   }
 
   // aggregate bar
-  const stack=$("#stack"); stack.innerHTML=""; stack.hidden=!total; $("#mixhead").hidden=!total;
-  top.forEach(id=>{ const s=document.createElement("span"); s.style.setProperty("--c",COLORS[id].c); s.style.flex=counts[id]; s.dataset.mood=id; s.title=COLORS[id].short+": "+counts[id]; stack.appendChild(s); });
+  $("#holo").hidden=!total; $("#mixhead").hidden=!total;
+  if(total){
+    holo.set(counts, total, mk);
+    $("#holo").setAttribute("aria-label", "A holographic blend of this month's feelings: "+top.map(id=>COLORS[id].short+" "+counts[id]).join(", ")+".");
+  }else holo.stop();
 
   // legend (all nine, most frequent first, then the rest in the usual order)
   const order = [...top, ...MOODS.map(m=>m.id).filter(id=>!counts[id])];
@@ -640,7 +651,8 @@ async function renderMonth(){
 
 function applyFocus(){
   document.querySelectorAll("#legend button").forEach(b=>b.setAttribute("aria-pressed", cal.focus===b.dataset.mood));
-  document.querySelectorAll(".day.has, #stack span").forEach(el=>el.classList.toggle("dim", !!cal.focus && el.dataset.mood!==cal.focus));
+  document.querySelectorAll(".day.has").forEach(el=>el.classList.toggle("dim", !!cal.focus && el.dataset.mood!==cal.focus));
+  holo.focus(cal.focus);
 }
 
 function renderDetail(days){
@@ -694,6 +706,116 @@ function renderDetail(days){
   });
   row.append(rm); el.appendChild(row);
 }
+
+/* ---------- holographic mix ----------
+   Each feeling becomes soft color fields; the number of fields and their size
+   follow how often it was picked, and the most frequent feeling is also the
+   ground, so it dominates. Painted small and scaled up for a smooth mesh, then
+   finished with an iridescent sheen, a moving light streak and fine grain. */
+const holo = (()=>{
+  const card=$("#holo"), cv=$("#holoCanvas"), ctx=cv.getContext("2d");
+  const small=document.createElement("canvas"); small.width=80; small.height=60;
+  const sx=small.getContext("2d");
+  const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let blobs=[], base="#888", focusId=null, raf=0, tilt={x:0,y:0}, grain=null;
+
+  function rng(seedStr){ let h=2166136261; for(const c of seedStr){ h^=c.charCodeAt(0); h=Math.imul(h,16777619); }
+    return ()=>{ h+=0x6D2B79F5; let t=h; t=Math.imul(t^t>>>15,t|1); t^=t+Math.imul(t^t>>>7,t|61); return ((t^t>>>14)>>>0)/4294967296; }; }
+  function hexA(hex,a){ const n=parseInt(hex.slice(1),16); return `rgba(${n>>16},${n>>8&255},${n&255},${a})`; }
+
+  function makeGrain(){
+    const g=document.createElement("canvas"); g.width=g.height=128; const x=g.getContext("2d"), d=x.createImageData(128,128);
+    for(let i=0;i<d.data.length;i+=4){ const v=Math.random()*255; d.data[i]=d.data[i+1]=d.data[i+2]=v; d.data[i+3]=255; }
+    x.putImageData(d,0,0); return g;
+  }
+
+  let counts0={}, top0=null;
+  function caption(){
+    const id=focusId||top0; if(!id) return;
+    $("#holoDot").style.setProperty("--c", COLORS[id].c);
+    $("#holoText").textContent = focusId
+      ? COLORS[id].short+" · "+counts0[id]+(counts0[id]===1?" day":" days")
+      : "Mostly "+COLORS[id].short.toLowerCase();
+  }
+  function set(counts,total,seed){
+    counts0=counts;
+    const r=rng(seed+JSON.stringify(counts));
+    const ids=Object.keys(counts).filter(id=>counts[id]>0).sort((a,b)=>counts[b]-counts[a]);
+    base=COLORS[ids[0]].c; top0=ids[0]; caption();
+    const SLOTS=22; blobs=[];
+    ids.forEach((id,i)=>{
+      const share=counts[id]/total;
+      const n=Math.max(1, Math.round(share*SLOTS));
+      for(let k=0;k<n;k++) blobs.push({id, c:COLORS[id].c, share,
+        x:r(), y:r(), rad:(i===0?.3:.14)+.55*Math.sqrt(share)*(.7+.6*r()),
+        ax:.05+.08*r(), ay:.05+.08*r(), sp:.00012+.00018*r(), ph:r()*6.283, order:-share+r()*.15});
+    });
+    blobs.sort((a,b)=>a.order-b.order); // big feelings first, small accents on top
+    resize(); start();
+  }
+
+  function resize(){
+    const dpr=Math.min(2, window.devicePixelRatio||1), w=cv.clientWidth||320, h=cv.clientHeight||240;
+    if(cv.width!==Math.round(w*dpr)){ cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr); }
+  }
+
+  function draw(t){
+    const W=small.width, H=small.height;
+    const dominant = focusId ? COLORS[focusId].c : base;
+    sx.globalCompositeOperation="source-over";
+    sx.fillStyle=dominant; sx.fillRect(0,0,W,H);
+    for(const b of blobs){
+      const on = !focusId || b.id===focusId;
+      const x=(b.x+Math.sin(t*b.sp+b.ph)*b.ax)*W, y=(b.y+Math.cos(t*b.sp*1.3+b.ph)*b.ay)*H;
+      const rr=b.rad*(focusId ? (on?1.25:.6) : 1)*W*.62;
+      const g=sx.createRadialGradient(x,y,0,x,y,rr);
+      const a = on ? .95 : .22;
+      g.addColorStop(0, hexA(b.c,a)); g.addColorStop(.55, hexA(b.c,a*.55)); g.addColorStop(1, hexA(b.c,0));
+      sx.fillStyle=g; sx.beginPath(); sx.arc(x,y,rr,0,6.283); sx.fill();
+    }
+    const cw=cv.width, ch=cv.height;
+    ctx.globalCompositeOperation="source-over"; ctx.globalAlpha=1;
+    ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality="high";
+    ctx.drawImage(small,0,0,cw,ch);
+
+    // iridescent foil: pastel spectrum that turns slowly and follows tilt
+    const ang = t*.00006 + tilt.x*.9, cx=cw/2, cy=ch/2, L=Math.hypot(cw,ch)/2;
+    const fx=Math.cos(ang)*L, fy=Math.sin(ang)*L;
+    const foil=ctx.createLinearGradient(cx-fx,cy-fy,cx+fx,cy+fy);
+    ["#ffb3e6","#b3e5ff","#c9ffe1","#fff4b3","#d9c2ff","#ffb3e6"].forEach((c,i,a)=>foil.addColorStop(i/(a.length-1),c));
+    ctx.globalCompositeOperation="soft-light"; ctx.globalAlpha=.42; ctx.fillStyle=foil; ctx.fillRect(0,0,cw,ch);
+
+    // a band of light sweeping across, like a hologram catching the sun
+    const p = ((t*.00005 + tilt.y*.35) % 1.6) - .3;
+    const sw=ctx.createLinearGradient(cw*(p-.25),0,cw*(p+.25),ch);
+    sw.addColorStop(0,"rgba(255,255,255,0)"); sw.addColorStop(.5,"rgba(255,255,255,.55)"); sw.addColorStop(1,"rgba(255,255,255,0)");
+    ctx.globalCompositeOperation="overlay"; ctx.globalAlpha=1; ctx.fillStyle=sw; ctx.fillRect(0,0,cw,ch);
+
+    // fine grain
+    if(!grain) grain=makeGrain();
+    ctx.globalCompositeOperation="overlay"; ctx.globalAlpha=.08;
+    ctx.fillStyle=ctx.createPattern(grain,"repeat"); ctx.fillRect(0,0,cw,ch);
+    ctx.globalCompositeOperation="source-over"; ctx.globalAlpha=1;
+  }
+
+  function loop(t){
+    if(card.hidden || $("#stepM").hidden){ raf=0; return; }
+    draw(t); raf=requestAnimationFrame(loop);
+  }
+  function start(){ if(reduce){ draw(0); return; } if(!raf) raf=requestAnimationFrame(loop); }
+  function stop(){ if(raf) cancelAnimationFrame(raf); raf=0; }
+
+  card.addEventListener("pointermove", e=>{
+    const r=card.getBoundingClientRect();
+    tilt.x=(e.clientX-r.left)/r.width-.5; tilt.y=(e.clientY-r.top)/r.height-.5;
+    if(!reduce){ card.style.setProperty("--ry",(tilt.x*8).toFixed(2)+"deg"); card.style.setProperty("--rx",(-tilt.y*8).toFixed(2)+"deg"); }
+    if(reduce) draw(0);
+  });
+  card.addEventListener("pointerleave", ()=>{ tilt={x:0,y:0}; card.style.setProperty("--rx","0deg"); card.style.setProperty("--ry","0deg"); if(reduce) draw(0); });
+  window.addEventListener("resize", ()=>{ if(!card.hidden){ resize(); if(reduce) draw(0); } });
+
+  return { set, stop, focus(id){ focusId=id; caption(); if(reduce || !raf) { if(blobs.length && !card.hidden){ resize(); draw(performance.now()); } } } };
+})();
 
 /* ---------- check in for another day ---------- */
 const log = { date:null, mood:null, tone:null, prevFocus:null };

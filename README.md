@@ -14,7 +14,7 @@ If you host it on GitHub Pages, you can add it to your home screen. On iPhone, t
 
 ## Your month
 
-Each time you get to your verses, the app saves that day's feeling and what you asked to hear. If you check in more than once in a day, the latest one counts. Tap **Your month** to see a calendar with each day colored by feeling, a bar showing the month's mix, and a count for each feeling. Tap a feeling in the list to highlight its days, or tap a day to see what you picked. You can change or remove any day, and add a check-in for a past day you missed. You can't check in for future days.
+Each time you get to your verses, the app saves that day's feeling and what you asked to hear. If you check in more than once in a day, the latest one counts. Tap **Your month** to see a calendar with each day colored by feeling, a holographic image that blends every feeling's color, with the most frequent feeling taking up the most space, and a count for each feeling. Tap a feeling in the list to highlight its days, or tap a day to see what you picked. You can change or remove any day, and add a check-in for a past day you missed. You can't check in for future days.
 
 No sign-in is needed. When you open the app as a claude.ai artifact, check-ins are saved privately to your account. Anywhere else, including GitHub Pages, they're saved in that browser's `localStorage` and never leave your device.
 
