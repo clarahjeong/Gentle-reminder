@@ -6,6 +6,12 @@ A small, calm web app for the start of the day. Pick how you're feeling, choose 
 2. **What do you need to hear?** Choose *Lift me up* (comfort), *Push me* (a challenge), or *A bit of both*.
 3. **Your verses.** Two verses appear. *New pair* gives you a different pair, and *Share as image* makes a card you can save or send.
 
+## On your phone
+
+The app is designed for phones first. Feelings are a one-thumb list, the **New pair** and **Share** buttons stay within reach at the bottom of the screen, and a tab bar switches between **Today** and **Your month**. On the calendar, swipe left or right to change months.
+
+If you host it on GitHub Pages, you can add it to your home screen. On iPhone, tap Share, then **Add to Home Screen**. It opens full screen like an app, and your check-ins stay on that phone.
+
 ## Your month
 
 Each time you get to your verses, the app saves that day's feeling and what you asked to hear. If you check in more than once in a day, the latest one counts. Tap **Your month** to see a calendar with each day colored by feeling, a bar showing the month's mix, and a count for each feeling. Tap a feeling in the list to highlight its days, or tap a day to see what you picked. You can also remove a day.
