@@ -717,6 +717,8 @@ const holo = (()=>{
   const small=document.createElement("canvas"); small.width=80; small.height=60;
   const sx=small.getContext("2d");
   const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const SPEED = reduce ? .25 : 1;   // reduced motion: colors still drift, but slowly, with no sweep or tilt
+  let onScreen = true;
   let blobs=[], base="#888", focusId=null, raf=0, tilt={x:0,y:0}, grain=null;
 
   function rng(seedStr){ let h=2166136261; for(const c of seedStr){ h^=c.charCodeAt(0); h=Math.imul(h,16777619); }
@@ -748,7 +750,7 @@ const holo = (()=>{
       const n=Math.max(1, Math.round(share*SLOTS));
       for(let k=0;k<n;k++) blobs.push({id, c:COLORS[id].c, share,
         x:r(), y:r(), rad:(i===0?.3:.14)+.55*Math.sqrt(share)*(.7+.6*r()),
-        ax:.05+.08*r(), ay:.05+.08*r(), sp:.00012+.00018*r(), ph:r()*6.283, order:-share+r()*.15});
+        ax:.10+.14*r(), ay:.08+.14*r(), sp:.00035+.00045*r(), ph:r()*6.283, br:.10+.10*r(), order:-share+r()*.15});
     });
     blobs.sort((a,b)=>a.order-b.order); // big feelings first, small accents on top
     resize(); start();
@@ -766,8 +768,11 @@ const holo = (()=>{
     sx.fillStyle=dominant; sx.fillRect(0,0,W,H);
     for(const b of blobs){
       const on = !focusId || b.id===focusId;
-      const x=(b.x+Math.sin(t*b.sp+b.ph)*b.ax)*W, y=(b.y+Math.cos(t*b.sp*1.3+b.ph)*b.ay)*H;
-      const rr=b.rad*(focusId ? (on?1.25:.6) : 1)*W*.62;
+      const tt=t*SPEED;
+      const x=(b.x+Math.sin(tt*b.sp+b.ph)*b.ax+Math.sin(tt*b.sp*2.3+b.ph*1.7)*b.ax*.35)*W;
+      const y=(b.y+Math.cos(tt*b.sp*1.3+b.ph)*b.ay+Math.cos(tt*b.sp*1.9+b.ph*.6)*b.ay*.35)*H;
+      const breathe=1+b.br*Math.sin(tt*b.sp*2.1+b.ph*2);
+      const rr=b.rad*breathe*(focusId ? (on?1.25:.6) : 1)*W*.62;
       const g=sx.createRadialGradient(x,y,0,x,y,rr);
       const a = on ? .95 : .22;
       g.addColorStop(0, hexA(b.c,a)); g.addColorStop(.55, hexA(b.c,a*.55)); g.addColorStop(1, hexA(b.c,0));
@@ -779,14 +784,14 @@ const holo = (()=>{
     ctx.drawImage(small,0,0,cw,ch);
 
     // iridescent foil: pastel spectrum that turns slowly and follows tilt
-    const ang = t*.00006 + tilt.x*.9, cx=cw/2, cy=ch/2, L=Math.hypot(cw,ch)/2;
+    const ang = t*SPEED*.00028 + tilt.x*.9, cx=cw/2, cy=ch/2, L=Math.hypot(cw,ch)/2;
     const fx=Math.cos(ang)*L, fy=Math.sin(ang)*L;
     const foil=ctx.createLinearGradient(cx-fx,cy-fy,cx+fx,cy+fy);
     ["#ffb3e6","#b3e5ff","#c9ffe1","#fff4b3","#d9c2ff","#ffb3e6"].forEach((c,i,a)=>foil.addColorStop(i/(a.length-1),c));
     ctx.globalCompositeOperation="soft-light"; ctx.globalAlpha=.42; ctx.fillStyle=foil; ctx.fillRect(0,0,cw,ch);
 
     // a band of light sweeping across, like a hologram catching the sun
-    const p = ((t*.00005 + tilt.y*.35) % 1.6) - .3;
+    const p = reduce ? .5 + tilt.y*.35 : (((t*.00016 + tilt.y*.35) % 1.8) + 1.8) % 1.8 - .4;
     const sw=ctx.createLinearGradient(cw*(p-.25),0,cw*(p+.25),ch);
     sw.addColorStop(0,"rgba(255,255,255,0)"); sw.addColorStop(.5,"rgba(255,255,255,.55)"); sw.addColorStop(1,"rgba(255,255,255,0)");
     ctx.globalCompositeOperation="overlay"; ctx.globalAlpha=1; ctx.fillStyle=sw; ctx.fillRect(0,0,cw,ch);
@@ -799,22 +804,25 @@ const holo = (()=>{
   }
 
   function loop(t){
-    if(card.hidden || $("#stepM").hidden){ raf=0; return; }
+    if(card.hidden || $("#stepM").hidden || !onScreen){ raf=0; return; }
     draw(t); raf=requestAnimationFrame(loop);
   }
-  function start(){ if(reduce){ draw(0); return; } if(!raf) raf=requestAnimationFrame(loop); }
+  function start(){ if(!raf && onScreen) raf=requestAnimationFrame(loop); }
+  // pause while scrolled out of view to save battery
+  if("IntersectionObserver" in window){
+    new IntersectionObserver(es=>{ onScreen=es[0].isIntersecting; if(onScreen && blobs.length && !card.hidden) start(); else stop(); }).observe(card);
+  }
   function stop(){ if(raf) cancelAnimationFrame(raf); raf=0; }
 
   card.addEventListener("pointermove", e=>{
     const r=card.getBoundingClientRect();
     tilt.x=(e.clientX-r.left)/r.width-.5; tilt.y=(e.clientY-r.top)/r.height-.5;
     if(!reduce){ card.style.setProperty("--ry",(tilt.x*8).toFixed(2)+"deg"); card.style.setProperty("--rx",(-tilt.y*8).toFixed(2)+"deg"); }
-    if(reduce) draw(0);
   });
-  card.addEventListener("pointerleave", ()=>{ tilt={x:0,y:0}; card.style.setProperty("--rx","0deg"); card.style.setProperty("--ry","0deg"); if(reduce) draw(0); });
-  window.addEventListener("resize", ()=>{ if(!card.hidden){ resize(); if(reduce) draw(0); } });
+  card.addEventListener("pointerleave", ()=>{ tilt={x:0,y:0}; card.style.setProperty("--rx","0deg"); card.style.setProperty("--ry","0deg"); });
+  window.addEventListener("resize", ()=>{ if(!card.hidden) resize(); });
 
-  return { set, stop, focus(id){ focusId=id; caption(); if(reduce || !raf) { if(blobs.length && !card.hidden){ resize(); draw(performance.now()); } } } };
+  return { set, stop, focus(id){ focusId=id; caption(); if(!raf) { if(blobs.length && !card.hidden){ resize(); draw(performance.now()); } } } };
 })();
 
 /* ---------- check in for another day ---------- */
