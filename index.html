@@ -378,12 +378,18 @@ const $ = s => document.querySelector(s);
 const pick = arr => arr[Math.floor(Math.random()*arr.length)];
 const moodOf = id => MOODS.find(m=>m.id===id);
 
-// date line
-try{
-  const d = new Date();
-  const part = d.getHours()<12 ? "Morning" : d.getHours()<17 ? "Afternoon" : "Evening";
-  $("#date").textContent = d.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}) + " · " + part;
-}catch(e){}
+// date line + time-of-day tone: from 5 pm the first question looks back on the day
+function refreshTimeOfDay(){
+  try{
+    const d = new Date(), h = d.getHours();
+    const part = h<12 ? "Morning" : h<17 ? "Afternoon" : "Evening";
+    $("#date").textContent = d.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}) + " · " + part;
+    $("#h1").textContent = part==="Evening" ? "How did you walk into today?" : "How are you walking into today?";
+  }catch(e){}
+}
+refreshTimeOfDay();
+setInterval(refreshTimeOfDay, 60000);
+document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) refreshTimeOfDay(); });
 
 // step 1: mood tiles
 MOODS.forEach(m=>{
