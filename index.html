@@ -142,14 +142,15 @@ footer{font-size:12px;color:var(--faint);line-height:1.5}
 .day.future{color:var(--faint);opacity:.5;cursor:default}
 .day.today:not(.has){box-shadow:inset 0 0 0 1.5px var(--ink);color:var(--ink);font-weight:600}
 .day[aria-pressed="true"]{box-shadow:0 0 0 2px var(--ground),0 0 0 4px var(--ink)}
-.swipe-hint{font-size:12px;color:var(--faint);text-align:center;margin:-10px 0 0}
 
-.detail{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:8px;min-height:72px}
-.detail .dd{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500}
-.detail .feel{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:22px;font-weight:400;line-height:1.25}
+.detail{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:12px;min-height:72px}
+.detail > *{margin:0;line-height:1.3}
+.detail .dd{font-size:14px;color:var(--muted);font-weight:500}
+.detail .feel{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:22px;font-weight:400;line-height:1.2}
 .detail .need{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:8px}
 .detail .none{font-size:15px;color:var(--muted);margin:0}
-.detail .row{display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.detail .row{display:flex;gap:6px 16px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.detail .row .linkbtn{padding:0;line-height:1.3}
 /* holographic mix: every feeling's color, the most frequent one dominant */
 .holo{position:relative;border-radius:22px;overflow:hidden;aspect-ratio:4/3;max-width:100%;background:var(--line);box-shadow:0 1px 0 rgba(255,255,255,.4) inset,0 18px 40px -24px rgba(20,30,25,.45);transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .5s cubic-bezier(.2,.7,.2,1);touch-action:pan-y}
 .holo canvas{display:block;width:100%;height:100%}
@@ -158,7 +159,6 @@ footer{font-size:12px;color:var(--faint);line-height:1.5}
 .holo-cap .mdot{width:10px;height:10px;box-shadow:0 0 0 1.5px rgba(255,255,255,.9)}
 .holo-cap span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dim{opacity:.18}
-.store-note{font-size:12px;color:var(--faint);margin:0}
 
 /* ---------- check in for another day ---------- */
 .detail .cta{align-self:flex-start;min-height:44px;font-size:15px;padding:0 18px}
@@ -293,9 +293,7 @@ footer{font-size:12px;color:var(--faint);line-height:1.5}
     </div>
     <p class="msum" id="msum">Loading…</p>
     <div class="cal" id="cal" role="group" aria-label="Calendar"></div>
-    <p class="swipe-hint" aria-hidden="true">Swipe the calendar to change months</p>
     <div class="detail" id="detail" aria-live="polite"></div>
-    <p class="store-note" id="storeNote"></p>
   </section>
 </div>
 
@@ -616,9 +614,6 @@ async function renderMonth(){
   }
   applyFocus();
   renderDetail(days);
-  $("#storeNote").textContent = store.mode==="db"
-    ? "Your check-ins are private to you and follow you on any device where you open this page."
-    : "Your check-ins are saved in this browser only. Nothing leaves your device.";
 }
 
 function applyFocus(){
