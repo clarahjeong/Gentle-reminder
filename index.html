@@ -20,6 +20,7 @@
   --lift:#5F8A78; --push:#646C9E;
   --sel:#27302C; --sel-ink:#F4F5F2;
   --bar:rgba(244,245,242,.88);
+  --veil:rgba(255,255,255,.9); --veil-strong:#fff; --menu:rgba(255,255,255,.86);
   --serif:"Newsreader", "Iowan Old Style", Georgia, serif;
   --sans:"Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --tabbar:64px;
@@ -34,6 +35,7 @@
     --lift:#8DB5A3; --push:#A3A8D6;
     --sel:#E4E8E5; --sel-ink:#131715;
     --bar:rgba(19,23,21,.88);
+    --veil:rgba(255,255,255,.1); --veil-strong:rgba(255,255,255,.16); --menu:rgba(34,40,37,.86);
   }
 }
 :root[data-theme="dark"]{
@@ -43,6 +45,7 @@
   --lift:#8DB5A3; --push:#A3A8D6;
   --sel:#E4E8E5; --sel-ink:#131715;
   --bar:rgba(19,23,21,.88);
+  --veil:rgba(255,255,255,.1); --veil-strong:rgba(255,255,255,.16); --menu:rgba(34,40,37,.86);
 }
 [hidden]{display:none!important}
 *{box-sizing:border-box}
@@ -155,27 +158,27 @@ footer{font-size:12px;color:var(--faint);line-height:1.5}
 .holo{position:relative;border-radius:22px;overflow:hidden;aspect-ratio:4/3;max-width:100%;background:var(--line);box-shadow:0 1px 0 rgba(255,255,255,.4) inset,0 18px 40px -24px rgba(20,30,25,.45);transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .5s cubic-bezier(.2,.7,.2,1);touch-action:pan-y}
 .holo canvas{display:block;width:100%;height:100%}
 .holo::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);pointer-events:none}
-.holo-cap{position:absolute;left:14px;bottom:14px;display:flex;align-items:center;gap:8px;padding:6px 12px 6px 10px;border-radius:999px;background:rgba(255,255,255,.22);box-shadow:inset 0 0 0 1px rgba(255,255,255,.3);-webkit-backdrop-filter:blur(10px) saturate(1.2);backdrop-filter:blur(10px) saturate(1.2);color:rgba(20,25,22,.82);font-size:13px;font-weight:500;max-width:calc(100% - 76px)}
-/* one quiet save control inside the card */
-.holo-save{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
-.holo-btn{width:40px;height:40px;border-radius:50%;border:0;display:grid;place-items:center;cursor:pointer;color:rgba(20,25,22,.72);background:rgba(255,255,255,0);transition:background .2s,color .2s;position:relative}
+/* caption + save sit quietly above the card */
+.holo-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:-10px;position:relative;z-index:3}
+.holo-cap{display:flex;align-items:center;gap:8px;margin:0;font-size:14px;color:var(--muted);line-height:1.35;min-width:0}
+.holo-cap .mdot{width:9px;height:9px;flex:none}
+.holo-save{position:relative;flex:none}
+.holo-btn{width:40px;height:40px;border-radius:50%;border:0;display:grid;place-items:center;cursor:pointer;color:var(--muted);background:transparent;transition:background .2s,color .2s;position:relative;margin-right:-8px}
 .holo-btn svg{width:20px;height:20px}
-.holo-btn:hover,.holo-btn[aria-expanded="true"]{background:rgba(255,255,255,.35);color:rgba(20,25,22,.9)}
-.holo-btn:active{background:rgba(255,255,255,.45)}
-.holo-btn:focus-visible{outline:2px solid rgba(255,255,255,.9);outline-offset:1px}
-.holo-btn.busy::before{content:"";position:absolute;inset:3px;border-radius:50%;background:conic-gradient(rgba(20,25,22,.6) calc(var(--p,0)*1turn), rgba(255,255,255,.3) 0);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 2.5px),#000 calc(100% - 2px));mask:radial-gradient(farthest-side,transparent calc(100% - 2.5px),#000 calc(100% - 2px))}
-.holo-btn.ready::after{content:"";position:absolute;top:7px;right:7px;width:8px;height:8px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px rgba(20,25,22,.45)}
-.savemenu{display:flex;flex-direction:column;min-width:170px;padding:6px;border-radius:14px;background:rgba(255,255,255,.62);box-shadow:inset 0 0 0 1px rgba(255,255,255,.5),0 10px 30px -12px rgba(0,0,0,.35);-webkit-backdrop-filter:blur(16px) saturate(1.3);backdrop-filter:blur(16px) saturate(1.3);animation:menuIn .16s ease both}
-@keyframes menuIn{from{opacity:.001;transform:translateY(4px)}to{opacity:1;transform:none}}
-.savemenu button{font:inherit;font-size:14px;font-weight:500;color:#1d2320;background:none;border:0;border-radius:9px;min-height:40px;padding:0 10px;display:flex;align-items:center;gap:10px;cursor:pointer;text-align:left;white-space:nowrap}
+.holo-btn:hover,.holo-btn[aria-expanded="true"]{background:var(--veil);color:var(--ink)}
+.holo-btn:active{background:var(--veil-strong)}
+.holo-btn.busy::before{content:"";position:absolute;inset:3px;border-radius:50%;background:conic-gradient(var(--ink) calc(var(--p,0)*1turn), var(--line-strong) 0);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 2.5px),#000 calc(100% - 2px));mask:radial-gradient(farthest-side,transparent calc(100% - 2.5px),#000 calc(100% - 2px))}
+.holo-btn.ready::after{content:"";position:absolute;top:7px;right:7px;width:8px;height:8px;border-radius:50%;background:var(--ink)}
+.savemenu{position:absolute;top:calc(100% + 6px);right:-8px;display:flex;flex-direction:column;min-width:176px;padding:6px;border-radius:14px;background:var(--menu);box-shadow:inset 0 0 0 1px var(--line),0 12px 32px -14px rgba(0,0,0,.45);-webkit-backdrop-filter:blur(16px) saturate(1.3);backdrop-filter:blur(16px) saturate(1.3);animation:menuIn .16s ease both}
+@keyframes menuIn{from{opacity:.001;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.savemenu button{font:inherit;font-size:14px;font-weight:500;color:var(--ink);background:none;border:0;border-radius:9px;min-height:40px;padding:0 10px;display:flex;align-items:center;gap:10px;cursor:pointer;text-align:left;white-space:nowrap}
 .savemenu button svg{width:17px;height:17px;flex:none;opacity:.75}
-.savemenu button:hover,.savemenu button:focus-visible{background:rgba(255,255,255,.55);outline:none}
+.savemenu button:hover,.savemenu button:focus-visible{background:var(--veil);outline:none}
 .savemenu button:disabled{opacity:.5;cursor:default}
 .savestatus{font-size:13px;color:var(--muted);margin:-10px 0 0}
+.holo{position:relative;z-index:1}
 .savestatus:empty{display:none}
 @media (prefers-reduced-motion:reduce){.savemenu{animation:none}}
-.holo-cap .mdot{width:9px;height:9px;box-shadow:0 0 0 1.5px rgba(255,255,255,.55)}
-.holo-cap span{line-height:1.3}
 .dim{opacity:.18}
 
 /* ---------- check in for another day ---------- */
@@ -305,9 +308,8 @@ footer{font-size:12px;color:var(--faint);line-height:1.5}
         <button id="nextM" aria-label="Next month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
       </div>
     </div>
-    <div class="holo" id="holo">
-      <canvas id="holoCanvas" role="img" aria-label=""></canvas>
-      <div class="holo-cap" id="holoCap" aria-hidden="true"><span class="mdot" id="holoDot"></span><span id="holoText"></span></div>
+    <div class="holo-head" id="holoHead">
+      <p class="holo-cap" id="holoCap"><span class="mdot" id="holoDot"></span><span id="holoText"></span></p>
       <div class="holo-save">
         <div class="savemenu" id="saveMenu" role="menu" aria-label="Save" hidden>
           <button role="menuitem" id="saveImg">
@@ -323,6 +325,9 @@ footer{font-size:12px;color:var(--faint);line-height:1.5}
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7 10.5l5 5 5-5"/><path d="M5 19.5h14"/></svg>
         </button>
       </div>
+    </div>
+    <div class="holo" id="holo">
+      <canvas id="holoCanvas" role="img" aria-label=""></canvas>
     </div>
     <p class="savestatus" id="saveStatus" role="status"></p>
     <p class="msum" id="msum">Loading…</p>
@@ -630,7 +635,7 @@ async function renderMonth(){
   }
 
   // aggregate bar
-  $("#holo").hidden=!total; if(!total) $("#saveStatus").textContent="";
+  $("#holo").hidden=!total; $("#holoHead").hidden=!total; if(!total) $("#saveStatus").textContent="";
   if(total){
     holo.set(counts, total, mk);
     $("#holoCanvas").setAttribute("aria-label", "A holographic blend of this month's feelings: "+top.map(id=>COLORS[id].short+" "+counts[id]).join(", ")+".");
