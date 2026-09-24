@@ -155,14 +155,26 @@ footer{font-size:12px;color:var(--faint);line-height:1.5}
 .holo{position:relative;border-radius:22px;overflow:hidden;aspect-ratio:4/3;max-width:100%;background:var(--line);box-shadow:0 1px 0 rgba(255,255,255,.4) inset,0 18px 40px -24px rgba(20,30,25,.45);transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .5s cubic-bezier(.2,.7,.2,1);touch-action:pan-y}
 .holo canvas{display:block;width:100%;height:100%}
 .holo::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);pointer-events:none}
-.holo-cap{position:absolute;left:14px;bottom:14px;display:flex;align-items:center;gap:8px;padding:7px 12px 7px 10px;border-radius:999px;background:rgba(255,255,255,.72);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#1d2320;font-size:13px;font-weight:500;max-width:calc(100% - 28px)}
-.saverow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:-8px}
-.btn.small{min-height:40px;font-size:14px;font-weight:600;padding:0 14px}
-.btn.small svg{width:16px;height:16px}
-.btn.small:disabled{opacity:.6}
-.savestatus{font-size:13px;color:var(--muted);flex-basis:100%}
+.holo-cap{position:absolute;left:14px;bottom:14px;display:flex;align-items:center;gap:8px;padding:6px 12px 6px 10px;border-radius:999px;background:rgba(255,255,255,.22);box-shadow:inset 0 0 0 1px rgba(255,255,255,.3);-webkit-backdrop-filter:blur(10px) saturate(1.2);backdrop-filter:blur(10px) saturate(1.2);color:rgba(20,25,22,.82);font-size:13px;font-weight:500;max-width:calc(100% - 76px)}
+/* one quiet save control inside the card */
+.holo-save{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.holo-btn{width:40px;height:40px;border-radius:50%;border:0;display:grid;place-items:center;cursor:pointer;color:rgba(20,25,22,.72);background:rgba(255,255,255,0);transition:background .2s,color .2s;position:relative}
+.holo-btn svg{width:20px;height:20px}
+.holo-btn:hover,.holo-btn[aria-expanded="true"]{background:rgba(255,255,255,.35);color:rgba(20,25,22,.9)}
+.holo-btn:active{background:rgba(255,255,255,.45)}
+.holo-btn:focus-visible{outline:2px solid rgba(255,255,255,.9);outline-offset:1px}
+.holo-btn.busy::before{content:"";position:absolute;inset:3px;border-radius:50%;background:conic-gradient(rgba(20,25,22,.6) calc(var(--p,0)*1turn), rgba(255,255,255,.3) 0);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 2.5px),#000 calc(100% - 2px));mask:radial-gradient(farthest-side,transparent calc(100% - 2.5px),#000 calc(100% - 2px))}
+.holo-btn.ready::after{content:"";position:absolute;top:7px;right:7px;width:8px;height:8px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px rgba(20,25,22,.45)}
+.savemenu{display:flex;flex-direction:column;min-width:170px;padding:6px;border-radius:14px;background:rgba(255,255,255,.62);box-shadow:inset 0 0 0 1px rgba(255,255,255,.5),0 10px 30px -12px rgba(0,0,0,.35);-webkit-backdrop-filter:blur(16px) saturate(1.3);backdrop-filter:blur(16px) saturate(1.3);animation:menuIn .16s ease both}
+@keyframes menuIn{from{opacity:.001;transform:translateY(4px)}to{opacity:1;transform:none}}
+.savemenu button{font:inherit;font-size:14px;font-weight:500;color:#1d2320;background:none;border:0;border-radius:9px;min-height:40px;padding:0 10px;display:flex;align-items:center;gap:10px;cursor:pointer;text-align:left;white-space:nowrap}
+.savemenu button svg{width:17px;height:17px;flex:none;opacity:.75}
+.savemenu button:hover,.savemenu button:focus-visible{background:rgba(255,255,255,.55);outline:none}
+.savemenu button:disabled{opacity:.5;cursor:default}
+.savestatus{font-size:13px;color:var(--muted);margin:-10px 0 0}
 .savestatus:empty{display:none}
-.holo-cap .mdot{width:10px;height:10px;box-shadow:0 0 0 1.5px rgba(255,255,255,.9)}
+@media (prefers-reduced-motion:reduce){.savemenu{animation:none}}
+.holo-cap .mdot{width:9px;height:9px;box-shadow:0 0 0 1.5px rgba(255,255,255,.55)}
 .holo-cap span{line-height:1.3}
 .dim{opacity:.18}
 
@@ -293,21 +305,26 @@ footer{font-size:12px;color:var(--faint);line-height:1.5}
         <button id="nextM" aria-label="Next month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
       </div>
     </div>
-    <div class="holo" id="holo" role="img" aria-label="">
-      <canvas id="holoCanvas"></canvas>
+    <div class="holo" id="holo">
+      <canvas id="holoCanvas" role="img" aria-label=""></canvas>
       <div class="holo-cap" id="holoCap" aria-hidden="true"><span class="mdot" id="holoDot"></span><span id="holoText"></span></div>
+      <div class="holo-save">
+        <div class="savemenu" id="saveMenu" role="menu" aria-label="Save" hidden>
+          <button role="menuitem" id="saveImg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.5-4.5L6 21"/></svg>
+            Save image
+          </button>
+          <button role="menuitem" id="saveVid">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="13" height="14" rx="3"/><path d="M16 10l5-3v10l-5-3"/></svg>
+            <span id="saveVidLabel">Save video</span>
+          </button>
+        </div>
+        <button class="holo-btn" id="saveBtn" aria-label="Save" aria-haspopup="menu" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7 10.5l5 5 5-5"/><path d="M5 19.5h14"/></svg>
+        </button>
+      </div>
     </div>
-    <div class="saverow" id="saveRow">
-      <button class="btn small" id="saveImg">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.5-4.5L6 21"/></svg>
-        Save image
-      </button>
-      <button class="btn small" id="saveVid">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="13" height="14" rx="3"/><path d="M16 10l5-3v10l-5-3"/></svg>
-        <span id="saveVidLabel">Save video</span>
-      </button>
-      <span class="savestatus" id="saveStatus" role="status"></span>
-    </div>
+    <p class="savestatus" id="saveStatus" role="status"></p>
     <p class="msum" id="msum">Loading…</p>
     <div class="cal" id="cal" role="group" aria-label="Calendar"></div>
     <div class="detail" id="detail" aria-live="polite"></div>
@@ -613,10 +630,10 @@ async function renderMonth(){
   }
 
   // aggregate bar
-  $("#holo").hidden=!total; $("#saveRow").hidden=!total;
+  $("#holo").hidden=!total; if(!total) $("#saveStatus").textContent="";
   if(total){
     holo.set(counts, total, mk);
-    $("#holo").setAttribute("aria-label", "A holographic blend of this month's feelings: "+top.map(id=>COLORS[id].short+" "+counts[id]).join(", ")+".");
+    $("#holoCanvas").setAttribute("aria-label", "A holographic blend of this month's feelings: "+top.map(id=>COLORS[id].short+" "+counts[id]).join(", ")+".");
   }else holo.stop();
 
   // calendar grid (weeks start on Sunday)
@@ -854,6 +871,14 @@ const saver = (()=>{
   const dlP = (window.claude && typeof window.claude.use==="function") ? window.claude.use("downloads").catch(()=>null) : Promise.resolve(null);
   let dl = null; dlP.then(v=>{ dl=v; });
   const status = m => { $("#saveStatus").textContent = m||""; };
+  const btn=$("#saveBtn"), menu=$("#saveMenu");
+  function openMenu(){ menu.hidden=false; btn.setAttribute("aria-expanded","true"); }
+  function closeMenu(){ menu.hidden=true; btn.setAttribute("aria-expanded","false"); }
+  btn.addEventListener("click", e=>{ e.stopPropagation(); menu.hidden ? openMenu() : closeMenu(); if(!menu.hidden) (menu.querySelector("button:not([hidden]):not(:disabled)")||btn).focus({preventScroll:true}); });
+  document.addEventListener("click", e=>{ if(!menu.hidden && !e.target.closest(".holo-save")) closeMenu(); });
+  document.addEventListener("keydown", e=>{ if(e.key==="Escape" && !menu.hidden){ closeMenu(); btn.focus(); } });
+  // keep taps on the control from tilting the card
+  $(".holo-save").addEventListener("pointermove", e=>e.stopPropagation());
   const monthLabel = () => cal.view.toLocaleDateString(undefined,{month:"long", year:"numeric"});
   const fileBase = () => "gentle-reminder-"+monthKey(cal.view);
 
@@ -880,7 +905,7 @@ const saver = (()=>{
 
   // image: composed synchronously so the phone still counts it as your tap
   $("#saveImg").addEventListener("click", ()=>{
-    status("");
+    status(""); closeMenu();
     const c=document.createElement("canvas"); c.width=1080; c.height=1350;
     holo.compose(c.getContext("2d"), c.width, c.height, performance.now(), monthLabel());
     deliver(dataURLtoBlob(c.toDataURL("image/png")), fileBase()+".png");
@@ -901,8 +926,10 @@ const saver = (()=>{
 
   $("#saveVid").addEventListener("click", async ()=>{
     if(recording) return;
-    if(readyBlob){ const b=readyBlob, n=readyName; readyBlob=null; $("#saveVidLabel").textContent="Save video"; await deliver(b,n); return; }
-    recording=true; status(""); $("#saveVid").disabled=true; $("#saveImg").disabled=true;
+    closeMenu();
+    if(readyBlob){ const b=readyBlob, n=readyName; readyBlob=null; $("#saveVidLabel").textContent="Save video"; btn.classList.remove("ready"); await deliver(b,n); return; }
+    recording=true; status("Recording a 6-second video…"); $("#saveVid").disabled=true; $("#saveImg").disabled=true;
+    btn.classList.add("busy"); btn.setAttribute("aria-label","Recording video");
     const c=document.createElement("canvas"); c.width=720; c.height=900;
     const x=c.getContext("2d"), label=monthLabel();
     const stream=c.captureStream(30);
@@ -915,19 +942,22 @@ const saver = (()=>{
       holo.compose(x, c.width, c.height, now, label);
       const left=Math.ceil(SECS-(now-t0)/1000);
       $("#saveVidLabel").textContent = left>0 ? "Recording… "+left : "Finishing…";
+      btn.style.setProperty("--p", Math.min(1,(now-t0)/(SECS*1000)).toFixed(3));
       if(now-t0 < SECS*1000) raf=requestAnimationFrame(frame); else rec.stop();
     };
     holo.compose(x, c.width, c.height, t0, label);
     rec.start(250); raf=requestAnimationFrame(frame);
     await done; cancelAnimationFrame(raf); stream.getTracks().forEach(tr=>tr.stop());
     recording=false; $("#saveVid").disabled=false; $("#saveImg").disabled=false;
+    btn.classList.remove("busy"); btn.style.removeProperty("--p"); btn.setAttribute("aria-label","Save"); status("");
     const type=(rec.mimeType||mime).split(";")[0], ext=type.includes("mp4")?"mp4":"webm";
     const blob=new Blob(chunks,{type}), name=fileBase()+"."+ext;
     if(!blob.size){ $("#saveVidLabel").textContent="Save video"; status("The recording came out empty. Try again."); return; }
     if(dl){ $("#saveVidLabel").textContent="Save video"; await deliver(blob,name); return; }
     // the share sheet needs a fresh tap, so hand the finished video to one
     readyBlob=blob; readyName=name; $("#saveVidLabel").textContent="Save video (ready)";
-    status("Your video is ready. Tap to save it.");
+    btn.classList.add("ready"); openMenu();
+    status("Your video is ready. Tap “Save video” to keep it.");
   });
   return { status };
 })();
