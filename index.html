@@ -156,8 +156,14 @@ footer{font-size:12px;color:var(--faint);line-height:1.5}
 .holo canvas{display:block;width:100%;height:100%}
 .holo::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);pointer-events:none}
 .holo-cap{position:absolute;left:14px;bottom:14px;display:flex;align-items:center;gap:8px;padding:7px 12px 7px 10px;border-radius:999px;background:rgba(255,255,255,.72);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#1d2320;font-size:13px;font-weight:500;max-width:calc(100% - 28px)}
+.saverow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:-8px}
+.btn.small{min-height:40px;font-size:14px;font-weight:600;padding:0 14px}
+.btn.small svg{width:16px;height:16px}
+.btn.small:disabled{opacity:.6}
+.savestatus{font-size:13px;color:var(--muted);flex-basis:100%}
+.savestatus:empty{display:none}
 .holo-cap .mdot{width:10px;height:10px;box-shadow:0 0 0 1.5px rgba(255,255,255,.9)}
-.holo-cap span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.holo-cap span{line-height:1.3}
 .dim{opacity:.18}
 
 /* ---------- check in for another day ---------- */
@@ -291,6 +297,17 @@ footer{font-size:12px;color:var(--faint);line-height:1.5}
       <canvas id="holoCanvas"></canvas>
       <div class="holo-cap" id="holoCap" aria-hidden="true"><span class="mdot" id="holoDot"></span><span id="holoText"></span></div>
     </div>
+    <div class="saverow" id="saveRow">
+      <button class="btn small" id="saveImg">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.5-4.5L6 21"/></svg>
+        Save image
+      </button>
+      <button class="btn small" id="saveVid">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="13" height="14" rx="3"/><path d="M16 10l5-3v10l-5-3"/></svg>
+        <span id="saveVidLabel">Save video</span>
+      </button>
+      <span class="savestatus" id="saveStatus" role="status"></span>
+    </div>
     <p class="msum" id="msum">Loading…</p>
     <div class="cal" id="cal" role="group" aria-label="Calendar"></div>
     <div class="detail" id="detail" aria-live="polite"></div>
@@ -371,6 +388,12 @@ const COLORS = {
   messedup: {c:"#A0662E", on:"#ffffff", short:"Messed up"}
 };
 const TAGS = {lift:"Lift", push:"Push"};
+// how the month reads in one line: "Mostly started the day feeling excited"
+const STARTED = {
+  great:"feeling excited", another:"feeling steady", over:"feeling worn out",
+  anxious:"feeling anxious", angry:"feeling angry", grieving:"grieving",
+  alone:"feeling alone", notenough:"doubting yourself", messedup:"feeling regretful"
+};
 const TONE_NAMES = {lift:"Lift me up", both:"A bit of both", push:"Push me"};
 
 const state = {step:1, mood:null, tone:null, pair:[], last:""};
@@ -590,7 +613,7 @@ async function renderMonth(){
   }
 
   // aggregate bar
-  $("#holo").hidden=!total;
+  $("#holo").hidden=!total; $("#saveRow").hidden=!total;
   if(total){
     holo.set(counts, total, mk);
     $("#holo").setAttribute("aria-label", "A holographic blend of this month's feelings: "+top.map(id=>COLORS[id].short+" "+counts[id]).join(", ")+".");
@@ -701,9 +724,13 @@ const holo = (()=>{
   function caption(){
     const id=focusId||top0; if(!id) return;
     $("#holoDot").style.setProperty("--c", COLORS[id].c);
-    $("#holoText").textContent = focusId
+    $("#holoText").textContent = captionText();
+  }
+  function captionText(){
+    const id=focusId||top0; if(!id) return "";
+    return focusId
       ? COLORS[id].short+" · "+counts0[id]+(counts0[id]===1?" day":" days")
-      : "Mostly "+COLORS[id].short.toLowerCase();
+      : "Mostly started the day "+STARTED[id];
   }
   function set(counts,total,seed){
     counts0=counts;
@@ -727,7 +754,8 @@ const holo = (()=>{
     if(cv.width!==Math.round(w*dpr)){ cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr); }
   }
 
-  function draw(t){
+  function draw(t, tctx, cw, ch){
+    tctx=tctx||ctx; cw=cw||cv.width; ch=ch||cv.height;
     const W=small.width, H=small.height;
     const dominant = focusId ? COLORS[focusId].c : base;
     sx.globalCompositeOperation="source-over";
@@ -744,29 +772,28 @@ const holo = (()=>{
       g.addColorStop(0, hexA(b.c,a)); g.addColorStop(.55, hexA(b.c,a*.55)); g.addColorStop(1, hexA(b.c,0));
       sx.fillStyle=g; sx.beginPath(); sx.arc(x,y,rr,0,6.283); sx.fill();
     }
-    const cw=cv.width, ch=cv.height;
-    ctx.globalCompositeOperation="source-over"; ctx.globalAlpha=1;
-    ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality="high";
-    ctx.drawImage(small,0,0,cw,ch);
+    tctx.globalCompositeOperation="source-over"; tctx.globalAlpha=1;
+    tctx.imageSmoothingEnabled=true; tctx.imageSmoothingQuality="high";
+    tctx.drawImage(small,0,0,cw,ch);
 
     // iridescent foil: pastel spectrum that turns slowly and follows tilt
     const ang = t*SPEED*.00028 + tilt.x*.9, cx=cw/2, cy=ch/2, L=Math.hypot(cw,ch)/2;
     const fx=Math.cos(ang)*L, fy=Math.sin(ang)*L;
-    const foil=ctx.createLinearGradient(cx-fx,cy-fy,cx+fx,cy+fy);
+    const foil=tctx.createLinearGradient(cx-fx,cy-fy,cx+fx,cy+fy);
     ["#ffb3e6","#b3e5ff","#c9ffe1","#fff4b3","#d9c2ff","#ffb3e6"].forEach((c,i,a)=>foil.addColorStop(i/(a.length-1),c));
-    ctx.globalCompositeOperation="soft-light"; ctx.globalAlpha=.42; ctx.fillStyle=foil; ctx.fillRect(0,0,cw,ch);
+    tctx.globalCompositeOperation="soft-light"; tctx.globalAlpha=.42; tctx.fillStyle=foil; tctx.fillRect(0,0,cw,ch);
 
     // a band of light sweeping across, like a hologram catching the sun
     const p = reduce ? .5 + tilt.y*.35 : (((t*.00016 + tilt.y*.35) % 1.8) + 1.8) % 1.8 - .4;
-    const sw=ctx.createLinearGradient(cw*(p-.25),0,cw*(p+.25),ch);
+    const sw=tctx.createLinearGradient(cw*(p-.25),0,cw*(p+.25),ch);
     sw.addColorStop(0,"rgba(255,255,255,0)"); sw.addColorStop(.5,"rgba(255,255,255,.55)"); sw.addColorStop(1,"rgba(255,255,255,0)");
-    ctx.globalCompositeOperation="overlay"; ctx.globalAlpha=1; ctx.fillStyle=sw; ctx.fillRect(0,0,cw,ch);
+    tctx.globalCompositeOperation="overlay"; tctx.globalAlpha=1; tctx.fillStyle=sw; tctx.fillRect(0,0,cw,ch);
 
     // fine grain
     if(!grain) grain=makeGrain();
-    ctx.globalCompositeOperation="overlay"; ctx.globalAlpha=.08;
-    ctx.fillStyle=ctx.createPattern(grain,"repeat"); ctx.fillRect(0,0,cw,ch);
-    ctx.globalCompositeOperation="source-over"; ctx.globalAlpha=1;
+    tctx.globalCompositeOperation="overlay"; tctx.globalAlpha=.08;
+    tctx.fillStyle=tctx.createPattern(grain,"repeat"); tctx.fillRect(0,0,cw,ch);
+    tctx.globalCompositeOperation="source-over"; tctx.globalAlpha=1;
   }
 
   function loop(t){
@@ -788,7 +815,121 @@ const holo = (()=>{
   card.addEventListener("pointerleave", ()=>{ tilt={x:0,y:0}; card.style.setProperty("--rx","0deg"); card.style.setProperty("--ry","0deg"); });
   window.addEventListener("resize", ()=>{ if(!card.hidden) resize(); });
 
-  return { set, stop, focus(id){ focusId=id; caption(); if(!raf) { if(blobs.length && !card.hidden){ resize(); draw(performance.now()); } } } };
+  // a shareable frame: the art full-bleed, with the caption and month on it
+  function compose(x, W, H, t, monthLabel){
+    draw(t, x, W, H);
+    const id=focusId||top0, s=W/1080, pad=64*s;
+    x.save();
+    // month, top-left
+    x.font=`300 ${Math.round(64*s)}px "Newsreader", Georgia, serif`; x.fillStyle="rgba(255,255,255,.96)";
+    x.shadowColor="rgba(0,0,0,.18)"; x.shadowBlur=18*s; x.textBaseline="alphabetic";
+    x.fillText(monthLabel, pad, pad+56*s);
+    x.shadowBlur=0;
+    // caption chip, bottom-left (wraps to two lines if needed)
+    x.font=`500 ${Math.round(34*s)}px "Figtree", system-ui, sans-serif`;
+    const text=captionText(), maxW=W-pad*2-110*s;
+    const words=text.split(" "), lines=[]; let ln="";
+    words.forEach(w=>{ const tt=ln?ln+" "+w:w; if(x.measureText(tt).width>maxW&&ln){lines.push(ln);ln=w;} else ln=tt; }); if(ln) lines.push(ln);
+    const lh=44*s, tw=Math.max(...lines.map(l=>x.measureText(l).width));
+    const bw=tw+110*s, bh=lines.length*lh+40*s, bx=pad, by=H-pad-bh, r=Math.min(bh/2, 40*s);
+    x.fillStyle="rgba(255,255,255,.8)"; x.beginPath(); x.roundRect(bx,by,bw,bh,r); x.fill();
+    x.fillStyle=COLORS[id].c; x.beginPath(); x.arc(bx+44*s, by+20*s+lh/2, 13*s, 0, 6.283); x.fill();
+    x.fillStyle="#1d2320"; x.textBaseline="middle";
+    lines.forEach((l,i)=>x.fillText(l, bx+74*s, by+20*s+lh/2+i*lh));
+    // small wordmark, bottom-right
+    x.font=`500 ${Math.round(24*s)}px "Figtree", system-ui, sans-serif`; x.textAlign="right"; x.textBaseline="alphabetic"; x.fillStyle="rgba(255,255,255,.9)";
+    x.shadowColor="rgba(0,0,0,.18)"; x.shadowBlur=12*s;
+    x.fillText("Gentle Reminder", W-pad, pad+50*s);
+    x.restore();
+  }
+
+  return { compose, captionText, set, stop, focus(id){ focusId=id; caption(); if(!raf) { if(blobs.length && !card.hidden){ resize(); draw(performance.now()); } } } };
+})();
+
+/* ---------- save the holographic mix ----------
+   On claude.ai the page asks the host to save the file (you confirm it there).
+   Elsewhere: the phone's share sheet when it can take files (Save Image /
+   Save Video on iPhone), otherwise a normal download. */
+const saver = (()=>{
+  const dlP = (window.claude && typeof window.claude.use==="function") ? window.claude.use("downloads").catch(()=>null) : Promise.resolve(null);
+  let dl = null; dlP.then(v=>{ dl=v; });
+  const status = m => { $("#saveStatus").textContent = m||""; };
+  const monthLabel = () => cal.view.toLocaleDateString(undefined,{month:"long", year:"numeric"});
+  const fileBase = () => "gentle-reminder-"+monthKey(cal.view);
+
+  function dataURLtoBlob(u){ const [h,b]=u.split(","), mime=h.match(/:(.*?);/)[1], bin=atob(b); const a=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) a[i]=bin.charCodeAt(i); return new Blob([a],{type:mime}); }
+
+  async function deliver(blob, filename){
+    if(dl){
+      try{ await dl.save({filename, data:blob}); status("Saved."); return true; }
+      catch(e){ if(e && e.code==="declined"){ status(""); return false; } if(e && e.code==="rate_limited"){ status("A save is already waiting for you to confirm."); return false; } }
+    }
+    try{
+      const file=new File([blob], filename, {type:blob.type});
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        await navigator.share({files:[file]}); status(""); return true;
+      }
+    }catch(e){ if(e && e.name==="AbortError"){ status(""); return false; } }
+    try{
+      const url=URL.createObjectURL(blob), a=document.createElement("a");
+      a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 15000);
+      status("Saved to your downloads."); return true;
+    }catch(e){ status("Couldn’t save here. Try again in your browser."); return false; }
+  }
+
+  // image: composed synchronously so the phone still counts it as your tap
+  $("#saveImg").addEventListener("click", ()=>{
+    status("");
+    const c=document.createElement("canvas"); c.width=1080; c.height=1350;
+    holo.compose(c.getContext("2d"), c.width, c.height, performance.now(), monthLabel());
+    deliver(dataURLtoBlob(c.toDataURL("image/png")), fileBase()+".png");
+  });
+
+  // video: a 6-second loop of the moving image
+  const SECS=6;
+  let recording=false, readyBlob=null, readyName="";
+  function pickMime(){
+    if(!window.MediaRecorder) return null;
+    for(const m of ["video/mp4;codecs=avc1","video/mp4","video/webm;codecs=vp9","video/webm;codecs=vp8","video/webm"]){
+      try{ if(MediaRecorder.isTypeSupported(m)) return m; }catch(e){}
+    }
+    return null;
+  }
+  const mime=pickMime();
+  if(!mime || !HTMLCanvasElement.prototype.captureStream){ $("#saveVid").hidden=true; }
+
+  $("#saveVid").addEventListener("click", async ()=>{
+    if(recording) return;
+    if(readyBlob){ const b=readyBlob, n=readyName; readyBlob=null; $("#saveVidLabel").textContent="Save video"; await deliver(b,n); return; }
+    recording=true; status(""); $("#saveVid").disabled=true; $("#saveImg").disabled=true;
+    const c=document.createElement("canvas"); c.width=720; c.height=900;
+    const x=c.getContext("2d"), label=monthLabel();
+    const stream=c.captureStream(30);
+    let rec; try{ rec=new MediaRecorder(stream,{mimeType:mime, videoBitsPerSecond:6_000_000}); }
+    catch(e){ rec=new MediaRecorder(stream); }
+    const chunks=[]; rec.ondataavailable=e=>{ if(e.data && e.data.size) chunks.push(e.data); };
+    const done=new Promise(r=>rec.onstop=r);
+    const t0=performance.now(); let raf=0;
+    const frame=now=>{
+      holo.compose(x, c.width, c.height, now, label);
+      const left=Math.ceil(SECS-(now-t0)/1000);
+      $("#saveVidLabel").textContent = left>0 ? "Recording… "+left : "Finishing…";
+      if(now-t0 < SECS*1000) raf=requestAnimationFrame(frame); else rec.stop();
+    };
+    holo.compose(x, c.width, c.height, t0, label);
+    rec.start(250); raf=requestAnimationFrame(frame);
+    await done; cancelAnimationFrame(raf); stream.getTracks().forEach(tr=>tr.stop());
+    recording=false; $("#saveVid").disabled=false; $("#saveImg").disabled=false;
+    const type=(rec.mimeType||mime).split(";")[0], ext=type.includes("mp4")?"mp4":"webm";
+    const blob=new Blob(chunks,{type}), name=fileBase()+"."+ext;
+    if(!blob.size){ $("#saveVidLabel").textContent="Save video"; status("The recording came out empty. Try again."); return; }
+    if(dl){ $("#saveVidLabel").textContent="Save video"; await deliver(blob,name); return; }
+    // the share sheet needs a fresh tap, so hand the finished video to one
+    readyBlob=blob; readyName=name; $("#saveVidLabel").textContent="Save video (ready)";
+    status("Your video is ready. Tap to save it.");
+  });
+  return { status };
 })();
 
 /* ---------- check in for another day ---------- */
