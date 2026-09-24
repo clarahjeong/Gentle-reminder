@@ -645,12 +645,6 @@ function renderDetail(days){
   const dot=document.createElement("span"); dot.className="mdot"; dot.style.setProperty("--c",COLORS[e.mood].c);
   const t=document.createElement("span"); t.textContent=moodOf(e.mood).label;
   feel.append(dot,t); el.appendChild(feel);
-  if(e.tone && TONE_NAMES[e.tone]){
-    const need=document.createElement("div"); need.className="need";
-    const nd=document.createElement("span"); nd.className="dot "+e.tone; 
-    need.append(nd, "You asked to hear: "+TONE_NAMES[e.tone]);
-    el.appendChild(need);
-  }
   const row=document.createElement("div"); row.className="row";
   if(e.at){ try{
     const at=new Date(e.at);
